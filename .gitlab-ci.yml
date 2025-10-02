@@ -1,0 +1,9 @@
+stages:
+    -  frontend-verify
+
+ping-runner:
+    stage: frontend-verify
+    tags:
+        - frontend
+    script:
+        - echo "hello frontend"
