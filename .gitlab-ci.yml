@@ -1,9 +1,17 @@
 stages:
-    -  frontend-verify
+    - frontend-verify
+    - backend-verify
 
-ping-runner:
+ping-frontend:
     stage: frontend-verify
     tags:
         - frontend
     script:
         - echo "hello frontend!"
+
+ping-backend:
+    stage: backend-verify
+    tags:
+        - backend
+    script:
+        - echo "backend backend backend"
