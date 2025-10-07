@@ -41,13 +41,14 @@ deploy-app:
     - frontend
   script:
     - echo "Deploying to IIS..."
-    # stop the app pool in IIS, copy contents into publish directory (that IIS uses), restart IIS app pool
     - powershell -NoProfile -Command "
-        Import-Module WebAdministration;
-        Stop-WebAppPool -Name 'CulinaryCommand' -ErrorAction SilentlyContinue;
-        Copy-Item -Recurse -Force 'publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish\';
-        Start-WebAppPool -Name 'CulinaryCommand';
+      Import-Module WebAdministration;
+      Stop-WebAppPool -Name 'CulinaryCommand' -ErrorAction SilentlyContinue;
+      Start-Sleep -Seconds 15;
+      Get-Process -Name 'w3wp' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue;
+      Start-Sleep -Seconds 2;
+      Copy-Item -Recurse -Force 'publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish\';
+      Start-WebAppPool -Name 'CulinaryCommand';
       "
-
   dependencies:
     - build-app
