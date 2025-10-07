@@ -44,7 +44,7 @@ deploy-app:
     # stop the app pool in IIS
     - powershell "Import-Module WebAdministration; Stop-WebAppPool -Name 'CulinaryCommand'"
     # copy published files into "production" publish folder
-    - powershell "Copy-Item -Recurse -Force 'C:\Users\vm-user\CulinaryCommand\publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish-temp\*'"
+    - powershell "Copy-Item -Recurse -Force 'C:\Users\vm-user\CulinaryCommand\publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish\*'"
     # restart the app pool in IIS
     - powershell "Import-Module WebAdministration; Start-WebAppPool -Name 'CulinaryCommand'"
   dependencies:
