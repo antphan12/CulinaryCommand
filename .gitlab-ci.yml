@@ -42,10 +42,12 @@ deploy-app:
   script:
     - echo "Deploying to IIS..."
     # stop the app pool in IIS
-    - powershell "Import-Module WebAdministration; Stop-WebAppPool -Name 'CulinaryCommand' -ErrorAction SilentlyContinue"
-    # copy published files into "production" publish folder
-    - powershell "Copy-Item -Recurse -Force 'C:\Users\vm-user\CulinaryCommand\publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish\*'"
-    # restart the app pool in IIS
-    - powershell "Import-Module WebAdministration; Start-WebAppPool -Name 'CulinaryCommand'"
+    - powershell -NoProfile -Command "
+    Import-Module WebAdministration;
+    Stop-WebAppPool -Name 'CulinaryCommand' -ErrorAction SilentlyContinue;
+    Copy-Item -Recurse -Force 'C:\Users\vm-user\CulinaryCommand\publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish\';
+    Start-WebAppPool -Name 'CulinaryCommand';
+    "
+
   dependencies:
     - build-app
