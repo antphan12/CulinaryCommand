@@ -27,7 +27,6 @@ build-app:
     - dotnet clean
     - dotnet restore
     - dotnet build --configuration Release
-    # publish to a temporary publish folder (dont overwrite folder that's currently being hosted)
     - dotnet publish ./CulinaryCommand.csproj -c Release -o publish-temp/
   artifacts:
     paths:
@@ -43,12 +42,31 @@ deploy-app:
     - echo "Deploying to IIS..."
     - powershell -NoProfile -Command "
       Import-Module WebAdministration;
+      
+
       Stop-WebAppPool -Name 'CulinaryCommand' -ErrorAction SilentlyContinue;
-      Start-Sleep -Seconds 15;
-      Get-Process -Name 'w3wp' -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue;
-      Start-Sleep -Seconds 2;
+      Start-Sleep -Seconds 5;
+      
+
+      taskkill /F /IM w3wp.exe /T 2>$null;
+      Start-Sleep -Seconds 3;
+      
+
+      $processesUsingDll = Get-Process | Where-Object { 
+        try { $_.Modules.FileName -like '*CulinaryCommand*' } catch { $false }
+      };
+      if ($processesUsingDll) {
+        $processesUsingDll | Stop-Process -Force;
+        Start-Sleep -Seconds 2;
+      }
+      
+
       Copy-Item -Recurse -Force 'publish-temp\*' 'C:\Users\vm-user\CulinaryCommand\publish\';
+      
+
       Start-WebAppPool -Name 'CulinaryCommand';
+      
+      Write-Host 'Deployment completed successfully';
       "
   dependencies:
     - build-app
