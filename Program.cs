@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+// using CulinaryCommand.Data;
 using CulinaryCommand.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// var conn = builder.Configuration.GetConnectionString("Default");
+// builder.Services.AddDbContext<AppDbContext>(opt =>
+//     opt.UseMySql(conn, ServerVersion.AutoDetect(conn)));
+
 
 var app = builder.Build();
 
