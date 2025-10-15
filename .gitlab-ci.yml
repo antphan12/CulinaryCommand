@@ -3,8 +3,10 @@ stages:
     - build
     - deploy
 
-ping-frontend:
+verify-frontend:
     stage: frontend-verify
+    rules:
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
     tags:
         - frontend
     script:
