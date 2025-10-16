@@ -48,7 +48,7 @@ deploy-app:
    #  - stops Microsoft IIS app pool
    #  - kills extra worker processes
    #  - copies the new publish output on the runner to the \publish\ folder on the VM
-   #  - restarts the Microsoft IIS app pool, 
+   #  - restarts the Microsoft IIS app pool, loads latest commit
    - powershell -NoProfile -Command "
      Import-Module WebAdministration;
      Write-Host 'Stopping app pool...';
