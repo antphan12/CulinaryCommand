@@ -25,6 +25,22 @@
                     </label>
                 </div>
             </div>
+            <!-- Username -->
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <InputText id="username" type="text" class="form-control" @bind-Value="signInModel.Username" placeholder="Enter your username" />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <div class="password-input-container">
+                    <InputText id="password" type="@(showPassword ? "text" : "password")" class="form-control" @bind-Value="signInModel.Password" placeholder="Enter your password" />
+                    <button type="button" class="password-toggle-btn" @onclick="TogglePasswordVisibility">
+                        <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                    </button>
+                </div>
+            </div>
         </EditForm>
     </div>
 </div>
