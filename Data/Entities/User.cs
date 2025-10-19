@@ -1,4 +1,7 @@
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
+using System.Data.SqlTypes;
+using System.Numerics;
 
 public class User
 {
@@ -6,16 +9,19 @@ public class User
     public int Id { get; set; }
 
     [Required, MaxLength(256)]
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; }
 
     [Required, MaxLength(12)]
-    public string Phone { get; set; } = string.Empty;
+    public string? Phone { get; set; }
 
     [Required, MaxLength(256)]
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; }
+
+    [Required, MaxLength(28)]
+    public string? Password { get; set; }
 
     [Required, MaxLength(128)]
-    public String Role { get; set; } = string.Empty;  // Change to ICollection?
+    public String? Role { get; set; } = string.Empty;  // Change to ICollection?
 
     // Navigation property for UserStation experience
     public ICollection<String>? StationsWorked { get; set; }
@@ -23,5 +29,5 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public int LocationId { get; set; }
+    public ICollection<int>? LocationId { get; set; }
 }

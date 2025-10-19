@@ -4,18 +4,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 public class Location
 {
     [Key]
-    public int ID { get; set; }
+    public int Id { get; set; }
 
     [Required, MaxLength(256)]
     public string? Name { get; set; }
 
     [Required, MaxLength(256)]
     public string? Address { get; set; }
-        [Required, MaxLength(256)]
+
+    [Required, MaxLength(256)]
     public string? City { get; set; }
-        [Required, MaxLength(256)]
+
+    [Required, MaxLength(256)]
     public string? State { get; set; }
-        [Required, MaxLength(256)]
+    
+    [Required, MaxLength(256)]
     public string? ZipCode { get; set; }
 
     // Relationships
