@@ -1,24 +1,24 @@
-<div class="card dashboard-card shadow-sm d-flex flex-row align-items-start py-2 px-3 mb-3">
+<div class="card dashboard-card shadow-sm d-flex flex-row align-items-center py-2 px-3 mb-5">
     <!-- Left colored box with icon -->
-    <div class="icon-box d-flex align-items-center justify-content-center me-3"
-        style="background-color:@LightenColor(Color); width:3rem; height:3rem; border-radius:0.75rem;">
-        <i class="@IconClass fs-3" style="color:@Color;"></i>
+    <div class="icon-box d-flex align-items-center justify-content-center me-4"
+        style="background-color:@LightenColor(Color); width:4rem; height:4rem; border-radius:0.75rem;">
+        <i class="@IconClass fs-2" style="color:@Color; "></i>
     </div>
 
     <!-- Card content -->
-    <div class="flex-grow-1 d-flex flex-column h-100">
+    <div class="flex-grow-1 d-flex flex-column justify-content-between" style="min-height:6rem;">
         <!-- Title at the top -->
         <div>
-            <h6 class="mb-1 fw-bold">@Title</h6>
+            <h5 class="mb-1 text-muted">@Title</h5>
         </div>
 
         <!-- Value left / Go link right at the bottom -->
         <div class="d-flex justify-content-between align-items-start mt-auto">
             @if (!string.IsNullOrEmpty(Value))
             {
-                <p class="mb-0 text-muted">@Value</p>
+                <p class="mb-0 fw-bold">@Value</p>
             }
-            <a href="@Link" class="small text-decoration-none">Go <i class="bi bi-arrow-right"></i></a>
+            <a href="@Link" class="small text-decoration-none me-2" style="color:green;">View All <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
 </div>
