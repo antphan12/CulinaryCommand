@@ -7,6 +7,7 @@
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <PublishReadyToRun>true</PublishReadyToRun>
     <UserSecretsId>e24da79b-85a6-4298-a2d6-f199829c9cf1</UserSecretsId>
+    <RazorLangVersion>8.0</RazorLangVersion>
   </PropertyGroup>
 
 <ItemGroup>

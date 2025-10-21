@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using CulinaryCommand.Components;
 using CulinaryCommand.Data;
+using CulinaryCommand.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
