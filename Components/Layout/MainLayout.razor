@@ -11,29 +11,54 @@
 
     <!-- Main Page containing the top row and main content-->
     <main>
-        <div class="top-row px-4 justify-content-right align-items-center">
+        <div class="top-row px-4 d-flex justify-content-end align-items-center">
 
-            <div class="dropdown">
-                <button class="btn btn-light dropdown-toggle" type="button" id="profileMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                    <img src="images/profile.jpg" alt="Profile" class="rounded-circle" width="30" height="30" />
-                    @if (Auth.IsSignedIn)
-                    {
-                        @Auth.CurrentUser
-                    }
-                    else
-                    {
-                        <span>Guest</span>
-                    }
-                </button>
+    <!-- Business Dropdown -->
+    <div class="dropdown me-3">
+        <button class="btn btn-light dropdown-toggle d-flex align-items-center py-2 pe-3" type="button"
+                id="businessMenu" data-bs-toggle="dropdown" aria-expanded="false" style="height:3rem;">
 
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileMenu">
-                    <li><a class="dropdown-item" href="/profile">View Profile</a></li>
-                    <li><a class="dropdown-item" href="/settings">Settings</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li><a class="dropdown-item" href="#" @onclick="Logout">Logout</a></li>
-                </ul>
+            <div class="icon-box d-flex align-items-center justify-content-center me-2"
+                style="background-color:#d3ddd5; width:2.5rem; height:2.5rem; border-radius:0.45rem;">
+                <i class="bi bi-building-check fs-4" style="color:#688f72;"></i>
             </div>
-        </div>
+            <span>Downtown Bistro</span>
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="businessMenu">
+            <li><h6 class="dropdown-header">Restaurants</h6></li>
+            <li><a class="dropdown-item" href="/settings">Uptown Cafe</a></li>
+            <li><a class="dropdown-item" href="/settings">Light Deli</a></li>
+        </ul>
+    </div>
+
+    <!-- Profile Dropdown -->
+    <div class="dropdown">
+        <button class="btn btn-light dropdown-toggle d-flex align-items-center py-2 px-3" type="button"
+                id="profileMenu" data-bs-toggle="dropdown" aria-expanded="false" style="height:3rem;">
+
+            <img src="images/profile.jpg" alt="Profile"
+                 class="rounded-circle me-2" style="width:2.5rem; height:2.5rem;" />
+
+            @if (Auth.IsSignedIn)
+            {
+                @Auth.CurrentUser
+            }
+            else
+            {
+                <span>Guest</span>
+            }
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileMenu">
+            <li><a class="dropdown-item" href="/profile">View Profile</a></li>
+            <li><a class="dropdown-item" href="/settings">Settings</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="#" @onclick="Logout">Logout</a></li>
+        </ul>
+    </div>
+</div>
+
 
         <article class="content px-4">
             @Body
