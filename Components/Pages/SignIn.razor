@@ -3,6 +3,7 @@
 @inject IUserService UserService
 @inject AuthService Auth
 @inject NavigationManager Nav
+@using CulinaryCommand.Data.Enums
 @using Microsoft.AspNetCore.Components.Forms
 @rendermode InteractiveServer
 
@@ -116,7 +117,7 @@
 
     private class SignInModel 
     {
-        public string Role { get; set; } = "Manager";
+        public string Role { get; set; } = Roles.Manager;           // Enum example
         public string Username { get; set; }
         public string Password { get; set; }
         public bool RememberMe { get; set; } = false;
