@@ -1,5 +1,6 @@
 using CulinaryCommand.Data;
 using CulinaryCommand.Data.Entities;
+using CulinaryCommand.Data.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 
@@ -9,7 +10,7 @@ namespace CulinaryCommand.Services
     {
         Task<User?> CreateUserAsync(string name, string email, string password, string role);
         Task<User?> GetUserByEmailAsync(string email);
-        Task<bool> ValidateCredentialsAsync(string email, string password);
+        Task<User?> ValidateCredentialsAsync(string email, string password);
     }
 
     public class UserService : IUserService {
@@ -35,7 +36,7 @@ namespace CulinaryCommand.Services
                 Name = name,
                 Email = email,
                 Password = HashPassword(password),
-                Roles = new List<string> { role },
+                Role = Roles.Manager.ToString(),
                 Phone = "",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -53,14 +54,14 @@ namespace CulinaryCommand.Services
             return await _context.Users.FirstOrDefaultAsync(user => user.Email == email);
         }
 
-        public async Task<bool> ValidateCredentialsAsync(string email, string password)
+        public async Task<User?> ValidateCredentialsAsync(string email, string password)
         {
             var user = await GetUserByEmailAsync(email);
             if (user == null)
             {
-                return false;
+                return null;
             }
-            return VerifyPassword(password, user.Password);
+            return VerifyPassword(password, user.Password) ? user : null;
         }
 
 
@@ -76,7 +77,7 @@ namespace CulinaryCommand.Services
         private bool VerifyPassword(string password, string hashedPassword)
         {
             var hashOfInput = HashPassword(password);
-            return hashOfInput == hashedPassword;
+            return hashOfInput == HashPassword(hashedPassword);
         }
     }
 

@@ -21,10 +21,10 @@ namespace CulinaryCommand.Data.Entities
 
 
         [Required, MaxLength(128)]
-        public ICollection<string> Roles { get; set; } = new List<string>();
+        public string? Role { get; set; } 
 
         // Navigation property for UserStation experience
-        public ICollection<String>? StationsWorked { get; set; }
+        public string? StationsWorked { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

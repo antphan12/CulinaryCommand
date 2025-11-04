@@ -4,6 +4,7 @@
 @inject AuthService Auth
 @inject NavigationManager Nav
 @using CulinaryCommand.Data.Enums
+@using CulinaryCommand.Data.Entities
 @using Microsoft.AspNetCore.Components.Forms
 @rendermode InteractiveServer
 
@@ -85,7 +86,7 @@
     protected override void OnInitialized()
     {
         if (signInModel == null)
-        signInModel = new() { Role = "Manager" }; // Default to manager
+        signInModel = new() { Role = Roles.Manager.ToString() }; // Default to manager
         if (Auth.IsSignedIn)
         {
             Nav.NavigateTo("/dashboard", true);
@@ -98,10 +99,10 @@
         Console.WriteLine($"Username: {signInModel.Username}");
         Console.WriteLine($"Password: {signInModel.Password}");
         Console.WriteLine($"Remember Me: {signInModel.RememberMe}");
-        bool isValid = await UserService.ValidateCredentialsAsync(signInModel.Username, signInModel.Password);
-        if (isValid)
+        User? user = await UserService.ValidateCredentialsAsync(signInModel.Username, signInModel.Password);
+        if (user != null)
         {
-            await Auth.SignInAsync(signInModel.Username);
+            await Auth.SignInAsync(signInModel.Username, signInModel.Role);
             Nav.NavigateTo("/dashboard", true);
         }
         else
@@ -117,7 +118,7 @@
 
     private class SignInModel 
     {
-        public string Role { get; set; } = Roles.Manager;           // Enum example
+        public string Role { get; set; } = Roles.Manager.ToString();           // Enum example
         public string Username { get; set; }
         public string Password { get; set; }
         public bool RememberMe { get; set; } = false;

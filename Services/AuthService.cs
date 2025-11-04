@@ -1,3 +1,4 @@
+using CulinaryCommand.Data.Enums;
 using Microsoft.JSInterop;
 
 namespace CulinaryCommand.Services
@@ -14,6 +15,8 @@ namespace CulinaryCommand.Services
 
         public bool IsSignedIn { get; private set; }
         public string? CurrentUser { get; private set; }
+
+        public string? UserRole { get; private set; }
 
         public event Action? OnAuthStateChanged;
 
@@ -35,10 +38,11 @@ namespace CulinaryCommand.Services
             }
         }
 
-        public async Task SignInAsync(string username)
+        public async Task SignInAsync(string username, string role)
         {
             CurrentUser = username;
             IsSignedIn = true;
+
             await _js.InvokeVoidAsync("localStorage.setItem", "cc_user", username);
             NotifyStateChanged();
         }
@@ -51,6 +55,11 @@ namespace CulinaryCommand.Services
             NotifyStateChanged();
         }
 
+        public string? GetUserRole()
+        {
+
+            return UserRole != null ? this.UserRole : Roles.Employee;
+        }
         private void NotifyStateChanged() => OnAuthStateChanged?.Invoke();
     }
 }
