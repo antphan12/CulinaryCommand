@@ -12,7 +12,7 @@ builder.Services.AddRazorComponents()
 //builder.Services.AddRazorPages();
 
 // DB hookup
-var conn = builder.Configuration.GetConnectionString("Default");
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseMySql(conn, new MySqlServerVersion(new Version(8, 0, 23))));
 
