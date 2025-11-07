@@ -1,4 +1,6 @@
 @page "/settings"
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.WebUtilities
 @rendermode InteractiveServer
 
 
@@ -15,35 +17,35 @@
         <ul class="nav nav-tabs settings-tabs mb-4" id="settingsTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link @(activeTab == "profile" ? "active" : "")" 
-                        @onclick="@(() => SetActiveTab("profile"))" 
+                        @onclick="@(() => OnTabClicked("profile"))" 
                         type="button">
                     <i class="fas fa-user me-2"></i>Profile
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link @(activeTab == "security" ? "active" : "")" 
-                        @onclick="@(() => SetActiveTab("security"))" 
+                        @onclick="@(() => OnTabClicked("security"))" 
                         type="button">
                     <i class="fas fa-lock me-2"></i>Security
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link @(activeTab == "notifications" ? "active" : "")" 
-                        @onclick="@(() => SetActiveTab("notifications"))" 
+                        @onclick="@(() => OnTabClicked("notifications"))" 
                         type="button">
                     <i class="fas fa-bell me-2"></i>Notifications
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link @(activeTab == "preferences" ? "active" : "")" 
-                        @onclick="@(() => SetActiveTab("preferences"))" 
+                        @onclick="@(() => OnTabClicked("preferences"))" 
                         type="button">
                     <i class="fas fa-cog me-2"></i>Preferences
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link @(activeTab == "restaurants" ? "active" : "")" 
-                        @onclick="@(() => SetActiveTab("restaurants"))" 
+                        @onclick="@(() => OnTabClicked("restaurants"))" 
                         type="button">
                     <i class="fas fa-user me-2"></i>Restaurants
                 </button>
@@ -482,7 +484,13 @@
 </div>
 
 @code {
-    private string activeTab = "profile";
+    [Parameter]
+    [SupplyParameterFromQuery(Name="tab")]
+    public string activeTab {get; set;}
+    
+    //private string activeTab = "profile";
+
+    
     private bool showCurrentPassword = false;
     private bool showNewPassword = false;
     private bool showConfirmPassword = false;
@@ -496,6 +504,20 @@
 
     protected override void OnInitialized()
     {
+        // this allows navigation to specific tabs of the settings page
+        // use the format "/settings?tab=restaurants"
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        // puts the parameter in tab value
+        // e.g. "?tab=restaurants" -> tabValue = "restaurants"
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("tab", out var tabValue))
+        {
+            activeTab = tabValue.ToString().ToLower(); // e.g., "restaurants"
+        }
+        else
+        {
+            activeTab = "profile"; // default tab
+        }
+
         // Initialize with default/current user data
         profileModel = new ProfileModel
         {
@@ -532,9 +554,10 @@
         
     }
 
-    private void SetActiveTab(string tab)
+    private void OnTabClicked(string tab)
     {
         activeTab = tab;
+        NavigationManager.NavigateTo($"/settings?tab={tab}", forceLoad: false);
     }
 
     private void HandleProfileSubmit()
