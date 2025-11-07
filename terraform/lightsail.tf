@@ -3,6 +3,7 @@ resource "aws_lightsail_instance" "culinary_command_app" {
     availability_zone = "us-east-2a"
     blueprint_id      = var.blueprint_id
     bundle_id         = var.bundle_id
+    key_pair_name     = var.key_pair_name
 
     tags = {
         component = "culinarycommand"
