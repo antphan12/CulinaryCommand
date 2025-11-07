@@ -42,6 +42,7 @@ jobs:
                 TF_VAR_lightsail_instance_name: culinary-command
                 TF_VAR_blueprint_id: ubuntu_24_04
                 TF_VAR_bundle_id: nano_3_0
+                TF_VAR_key_pair_name: culinary-command-key
               run: terraform plan -input=false -no-color -out tfplan
 
             - name: Terraform Apply
@@ -53,6 +54,7 @@ jobs:
                   TF_VAR_lightsail_instance_name: culinary-command
                   TF_VAR_blueprint_id: ubuntu_24_04
                   TF_VAR_bundle_id: nano_3_0
+                  TF_VAR_key_pair_name: culinary-command-key
               run: terraform apply -input=false -auto-approve tfplan
 
             - name: Display output variables
