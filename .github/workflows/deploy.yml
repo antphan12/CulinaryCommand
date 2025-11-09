@@ -26,6 +26,11 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
+            - name: Add host key
+              run: |
+                mkdir -p ~/.ssh
+                ssh-keyscan -H "${{ secrets.LIGHTSAIL_HOST }}" >> ~/.ssh/known_hosts
+
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
@@ -83,11 +88,6 @@ jobs:
               uses: webfactory/ssh-agent@v0.9.0
               with:
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-            - name: Add host key
-              run: |
-                mkdir -p ~/.ssh
-                ssh-keyscan -H "${{ secrets.LIGHTSAIL_HOST }}" >> ~/.ssh/known_hosts
 
             - name: Upload artifacts to Lightsail instance
               run: |
