@@ -1,0 +1,53 @@
+//possibly use this component to manage state for a logged in owner/manager
+namespace CulinaryCommand.Services
+{
+    public class ManagerSessionManager
+    {
+        // properties for a logged-in manager
+        public string? ManagerId { get; set; }
+        public string? ManagerName { get; set; }
+        public List<Restaurant>? Restaurants { get; set; }
+
+        private List<RestaurantModel> restaurants = new()
+        {
+            new RestaurantModel
+            {
+                Name = "Downtown Bistro",
+                CuisineType = "Modern American",
+                Address = "123 Main Street, Downtown, IA 50010",
+                Phone = "(515) 555-1234",
+                Email = "info@downtownbistro.com",
+                Description = "A modern eatery offering farm-to-table dishes and craft cocktails in a cozy downtown setting.",
+                Website = "https://www.downtownbistro.com"
+            },
+            new RestaurantModel
+            {
+                Name = "Uptown Cafe",
+                CuisineType = "Breakfast & Brunch",
+                Address = "456 Elm Street, Uptown, IA 50011",
+                Phone = "(515) 555-4567",
+                Email = "contact@uptowncafe.com",
+                Description = "Popular brunch spot known for fresh pastries, hearty breakfast plates, and artisan coffee.",
+                Website = "https://www.uptowncafe.com"
+            },
+            new RestaurantModel
+            {
+                Name = "Light Deli",
+                CuisineType = "Deli & Sandwiches",
+                Address = "789 Oak Avenue, Midtown, IA 50012",
+                Phone = "(515) 555-7890",
+                Email = "hello@lightdeli.com",
+                Description = "A bright and casual deli serving gourmet sandwiches, soups, and salads with local ingredients.",
+                Website = "https://www.lightdeli.com"
+            }
+        };  
+
+        // clear session data (on logout)
+        public void Clear()
+        {
+            ManagerId = null;
+            ManagerName = null;
+            Restaurants = null;
+        }
+    }
+}

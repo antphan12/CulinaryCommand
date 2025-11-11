@@ -1,6 +1,7 @@
 @page "/settings"
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.WebUtilities
+@using CulinaryCommand.Models
 @rendermode InteractiveServer
 
 
@@ -630,51 +631,9 @@
         // TODO: Add actual database update logic or API call
     }
 
-    private class RestaurantModel
-    {
-        public string Name { get; set; } = string.Empty;
-        public string CuisineType { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public int Rating { get; set; } = 5;
-        public string Website { get; set; } = string.Empty;
-    }
+    
 
-    private List<RestaurantModel> restaurants = new()
-{
-new RestaurantModel
-{
-Name = "Downtown Bistro",
-CuisineType = "Modern American",
-Address = "123 Main Street, Downtown, IA 50010",
-Phone = "(515) 555-1234",
-Email = "info@downtownbistro.com",
-Description = "A modern eatery offering farm-to-table dishes and craft cocktails in a cozy downtown setting.",
-Website = "https://www.downtownbistro.com"
-},
-new RestaurantModel
-{
-Name = "Uptown Cafe",
-CuisineType = "Breakfast & Brunch",
-Address = "456 Elm Street, Uptown, IA 50011",
-Phone = "(515) 555-4567",
-Email = "contact@uptowncafe.com",
-Description = "Popular brunch spot known for fresh pastries, hearty breakfast plates, and artisan coffee.",
-Website = "https://www.uptowncafe.com"
-},
-new RestaurantModel
-{
-Name = "Light Deli",
-CuisineType = "Deli & Sandwiches",
-Address = "789 Oak Avenue, Midtown, IA 50012",
-Phone = "(515) 555-7890",
-Email = "hello@lightdeli.com",
-Description = "A bright and casual deli serving gourmet sandwiches, soups, and salads with local ingredients.",
-Website = "https://www.lightdeli.com"
-}
-};
+    
 
 
     private void ExportData()
@@ -705,14 +664,7 @@ Website = "https://www.lightdeli.com"
         // This would typically require multiple confirmations and password verification
     }
 
-    private class ProfileModel
-    {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
-        public string Role { get; set; } = "Manager";
-    }
+  
 
     private class SecurityModel
     {
@@ -722,16 +674,7 @@ Website = "https://www.lightdeli.com"
         public bool EnableTwoFactor { get; set; } = false;
     }
 
-    private class NotificationModel
-    {
-        public bool TaskNotifications { get; set; } = true;
-        public bool ScheduleNotifications { get; set; } = true;
-        public bool SystemNotifications { get; set; } = false;
-        public bool PushNotifications { get; set; } = true;
-        public bool UrgentOnly { get; set; } = false;
-        public string QuietHoursStart { get; set; } = "22:00";
-        public string QuietHoursEnd { get; set; } = "08:00";
-    }
+
 
     private class PreferencesModel
     {
