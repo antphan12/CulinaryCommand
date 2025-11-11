@@ -1,3 +1,5 @@
+using CulinaryCommand.Models;
+    
 //possibly use this component to manage state for a logged in owner/manager
 namespace CulinaryCommand.Services
 {
@@ -6,12 +8,12 @@ namespace CulinaryCommand.Services
         // properties for a logged-in manager
         public string? ManagerId { get; set; }
         public string? ManagerName { get; set; }
-        public List<Restaurant>? Restaurants { get; set; }
 
-        private List<RestaurantModel> restaurants = new()
+        public List<RestaurantModel> Restaurants = new()
         {
             new RestaurantModel
             {
+                Id = 1,
                 Name = "Downtown Bistro",
                 CuisineType = "Modern American",
                 Address = "123 Main Street, Downtown, IA 50010",
@@ -22,6 +24,7 @@ namespace CulinaryCommand.Services
             },
             new RestaurantModel
             {
+                Id = 2,
                 Name = "Uptown Cafe",
                 CuisineType = "Breakfast & Brunch",
                 Address = "456 Elm Street, Uptown, IA 50011",
@@ -32,6 +35,7 @@ namespace CulinaryCommand.Services
             },
             new RestaurantModel
             {
+                Id = 3,
                 Name = "Light Deli",
                 CuisineType = "Deli & Sandwiches",
                 Address = "789 Oak Avenue, Midtown, IA 50012",
@@ -40,7 +44,7 @@ namespace CulinaryCommand.Services
                 Description = "A bright and casual deli serving gourmet sandwiches, soups, and salads with local ingredients.",
                 Website = "https://www.lightdeli.com"
             }
-        };  
+        };
 
         // clear session data (on logout)
         public void Clear()
@@ -51,3 +55,4 @@ namespace CulinaryCommand.Services
         }
     }
 }
+

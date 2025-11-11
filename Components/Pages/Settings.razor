@@ -1,9 +1,7 @@
-@page "/settings"
+@page "/settings/{Tab?}"                    // Redirect to /settings/profile
 @inject NavigationManager NavigationManager
-@using Microsoft.AspNetCore.WebUtilities
 @using CulinaryCommand.Models
 @rendermode InteractiveServer
-
 
 <PageTitle>Settings - Culinary Command</PageTitle>
 
@@ -17,33 +15,33 @@
         <!-- Navigation Tabs -->
         <ul class="nav nav-tabs settings-tabs mb-4" id="settingsTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(activeTab == "profile" ? "active" : "")"
-                    @onclick="@(() => OnTabClicked("profile"))" type="button">
+                <button class="nav-link @(ActiveTab == "profile" ? "active" : "")"
+                    @onclick="@(() => NavigateToTab("profile"))" type="button">
                     <i class="fas fa-user me-2"></i>Profile
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(activeTab == "security" ? "active" : "")"
-                    @onclick="@(() => OnTabClicked("security"))" type="button">
+                <button class="nav-link @(ActiveTab == "security" ? "active" : "")"
+                    @onclick="@(() => NavigateToTab("security"))" type="button">
                     <i class="fas fa-lock me-2"></i>Security
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(activeTab == "notifications" ? "active" : "")"
-                    @onclick="@(() => OnTabClicked("notifications"))" type="button">
+                <button class="nav-link @(ActiveTab == "notifications" ? "active" : "")"
+                    @onclick="@(() => NavigateToTab("notifications"))" type="button">
                     <i class="fas fa-bell me-2"></i>Notifications
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(activeTab == "preferences" ? "active" : "")"
-                    @onclick="@(() => OnTabClicked("preferences"))" type="button">
+                <button class="nav-link @(ActiveTab == "preferences" ? "active" : "")"
+                    @onclick="@(() => NavigateToTab("preferences"))" type="button">
                     <i class="fas fa-cog me-2"></i>Preferences
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(activeTab == "restaurants" ? "active" : "")"
-                    @onclick="@(() => OnTabClicked("restaurants"))" type="button">
-                    <i class="fas fa-user me-2"></i>Restaurants
+                <button class="nav-link @(ActiveTab == "restaurants" ? "active" : "")"
+                    @onclick="@(() => NavigateToTab("restaurants"))" type="button">
+                    <i class="fas fa-utensils me-2"></i>Restaurants
                 </button>
             </li>
         </ul>
@@ -51,7 +49,7 @@
         <!-- Tab Content -->
         <div class="tab-content">
             <!-- Profile Tab -->
-            @if (activeTab == "profile")
+            @if (ActiveTab == "profile")
             {
                 <div class="tab-pane active">
                     <h4 class="mb-4">
@@ -148,7 +146,7 @@
             }
 
             <!-- Security Tab -->
-            @if (activeTab == "security")
+            @if (ActiveTab == "security")
             {
                 <div class="tab-pane active">
                     <h4 class="mb-4">
@@ -218,7 +216,7 @@
             }
 
             <!-- Notifications Tab -->
-            @if (activeTab == "notifications")
+            @if (ActiveTab == "notifications")
             {
                 <div class="tab-pane active">
                     <h4 class="mb-4">
@@ -325,7 +323,7 @@
             }
 
             <!-- Preferences Tab -->
-            @if (activeTab == "preferences")
+            @if (ActiveTab == "preferences")
             {
                 <div class="tab-pane active">
                     <h4 class="mb-4">
@@ -444,7 +442,7 @@
             }
 
             <!-- Restaurants Tab -->
-            @if (activeTab == "restaurants")
+            @if (ActiveTab == "restaurants")
             {
                 <div class="tab-pane active">
                     <h4 class="mb-4">
@@ -491,7 +489,6 @@
                         </div>
 
                         <div class="row mb-3">
-
                             <div class="col-md-6">
                                 <label for="website" class="form-label">Website</label>
                                 <InputText id="website" class="form-control" @bind-Value="restaurantModel.Website"
@@ -505,20 +502,18 @@
                     </EditForm>
                 </div>
             }
-
         </div>
-
-
     </div>
 </div>
 
 @code {
     [Parameter]
-    [SupplyParameterFromQuery(Name = "tab")]
-    public string activeTab { get; set; }
+    public string? Tab { get; set; }
+    
+    [SupplyParameterFromQuery(Name = "restaurant")]
+    public int? RestaurantId { get; set; }
 
-    //private string activeTab = "profile";
-
+    private string ActiveTab => Tab?.ToLower() ?? "profile";
 
     private bool showCurrentPassword = false;
     private bool showNewPassword = false;
@@ -528,24 +523,18 @@
     private SecurityModel securityModel = new();
     private NotificationModel notificationModel = new();
     private PreferencesModel preferencesModel = new();
-
     private RestaurantModel restaurantModel = new();
 
     protected override void OnInitialized()
     {
-        // this allows navigation to specific tabs of the settings page
-        // use the format "/settings?tab=restaurants"
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        // puts the parameter in tab value
-        // e.g. "?tab=restaurants" -> tabValue = "restaurants"
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("tab", out var tabValue))
+        // Default to profile if no tab specified
+        @* if (string.IsNullOrEmpty(Tab))
         {
-            activeTab = tabValue.ToString().ToLower(); // e.g., "restaurants"
-        }
-        else
-        {
-            activeTab = "profile"; // default tab
-        }
+            NavigationManager.NavigateTo("/settings/profile");
+        } *@
+
+    
+
 
         // Initialize with default/current user data
         profileModel = new ProfileModel
@@ -579,23 +568,17 @@
             ShowTooltips = true,
             ItemsPerPage = "25"
         };
-
-        restaurantModel = new RestaurantModel
-        {
-            
-        };
     }
 
-    private void OnTabClicked(string tab)
+    private void NavigateToTab(string tab)
     {
-        activeTab = tab;
-        NavigationManager.NavigateTo($"/settings?tab={tab}", forceLoad: false);
+        NavigationManager.NavigateTo($"/settings/{tab}", forceLoad: false);
     }
 
     private void HandleProfileSubmit()
     {
         Console.WriteLine($"Profile updated: {profileModel.FirstName} {profileModel.LastName}");
-        // Add actual profile update logic here
+        // TODO: Add actual profile update logic here
     }
 
     private void HandleSecuritySubmit()
@@ -606,7 +589,7 @@
             return;
         }
         Console.WriteLine("Security settings updated");
-        // Add actual security update logic here
+        // TODO: Add actual security update logic here
     }
 
     private void HandleNotificationSubmit()
@@ -614,7 +597,7 @@
         Console.WriteLine("Notification settings updated");
         Console.WriteLine($"Task Notifications: {notificationModel.TaskNotifications}");
         Console.WriteLine($"Push Notifications: {notificationModel.PushNotifications}");
-        // Add actual notification update logic here
+        // TODO: Add actual notification update logic here
     }
 
     private void HandlePreferencesSubmit()
@@ -622,7 +605,7 @@
         Console.WriteLine("Preferences updated");
         Console.WriteLine($"Theme: {preferencesModel.Theme}");
         Console.WriteLine($"Language: {preferencesModel.Language}");
-        // Add actual preferences update logic here
+        // TODO: Add actual preferences update logic here
     }
 
     private void HandleRestaurantSubmit()
@@ -631,40 +614,29 @@
         // TODO: Add actual database update logic or API call
     }
 
-    
-
-    
-
-
     private void ExportData()
     {
         Console.WriteLine("Exporting user data...");
-        // Add data export logic here
-        // This would typically generate a downloadable file with user data
+        // TODO: Add data export logic here
     }
 
     private void ResetSettings()
     {
         Console.WriteLine("Resetting all settings to defaults...");
-        // Add logic to reset all settings to default values
-        // This would typically show a confirmation dialog first
+        // TODO: Add logic to reset all settings to default values
     }
 
     private void DeactivateAccount()
     {
         Console.WriteLine("Account deactivation requested...");
-        // Add account deactivation logic here
-        // This would typically show a confirmation dialog and require password
+        // TODO: Add account deactivation logic here
     }
 
     private void DeleteAccount()
     {
         Console.WriteLine("Account deletion requested...");
-        // Add account deletion logic here
-        // This would typically require multiple confirmations and password verification
+        // TODO: Add account deletion logic here
     }
-
-  
 
     private class SecurityModel
     {
@@ -673,8 +645,6 @@
         public string ConfirmPassword { get; set; } = string.Empty;
         public bool EnableTwoFactor { get; set; } = false;
     }
-
-
 
     private class PreferencesModel
     {
