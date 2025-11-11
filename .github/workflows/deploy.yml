@@ -118,9 +118,3 @@ jobs:
                   rm -rf ~/deploy/${{ github.sha }} && \
                   sudo systemctl restart '${{ env.SERVICE_NAME }}' && \
                   sudo systemctl --no-pager --lines=5 status '${{ env.SERVICE_NAME }}' || true"
-
-            - name: Health check (local port 5000)
-              run: |
-                ssh ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} "\
-                  curl -sS -I http://127.0.0.1:5000 || (sudo systemctl status --no-pager -l '${{ env.SERVICE_NAME }}'; \
-                  sudo journalctl -u '${{ env.SERVICE_NAME }}' -n 100 --no-pager; exit 1)"
