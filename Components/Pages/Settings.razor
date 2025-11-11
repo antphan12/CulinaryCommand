@@ -1,5 +1,6 @@
 @page "/settings/{Tab?}"                    // Redirect to /settings/profile
 @inject NavigationManager NavigationManager
+@inject ManagerSessionManager SessionManager
 @using CulinaryCommand.Models
 @rendermode InteractiveServer
 
@@ -525,15 +526,24 @@
     private PreferencesModel preferencesModel = new();
     private RestaurantModel restaurantModel = new();
 
+    protected override void OnParametersSet()
+    {
+        // Load the specific restaurant when RestaurantId is provided
+        if (RestaurantId.HasValue && ActiveTab == "restaurants")
+        {
+            LoadRestaurant(RestaurantId.Value);
+        }
+        
+        StateHasChanged();
+
+    }
+
     protected override void OnInitialized()
     {
-        // Default to profile if no tab specified
-        @* if (string.IsNullOrEmpty(Tab))
+        if (string.IsNullOrEmpty(Tab))
         {
             NavigationManager.NavigateTo("/settings/profile");
-        } *@
-
-    
+        }
 
 
         // Initialize with default/current user data
@@ -573,6 +583,7 @@
     private void NavigateToTab(string tab)
     {
         NavigationManager.NavigateTo($"/settings/{tab}", forceLoad: false);
+        StateHasChanged();
     }
 
     private void HandleProfileSubmit()
@@ -636,6 +647,33 @@
     {
         Console.WriteLine("Account deletion requested...");
         // TODO: Add account deletion logic here
+    }
+
+    private void LoadRestaurant(int restaurantId)
+    {
+        // TODO: Load from database based on restaurantId
+        // For now, using SessionManager as example
+        var restaurant = SessionManager.Restaurants?.FirstOrDefault(r => r.Id == restaurantId);
+        
+        if (restaurant != null)
+        {
+            restaurantModel = new RestaurantModel
+            {
+                Id = restaurant.Id,
+                Name = restaurant.Name,
+                CuisineType = restaurant.CuisineType,
+                Address = restaurant.Address,
+                Phone = restaurant.Phone,
+                Email = restaurant.Email,
+                Description = restaurant.Description,
+                Website = restaurant.Website
+            };
+        }
+        else
+        {
+            // Restaurant not found, initialize empty model
+            restaurantModel = new RestaurantModel();
+        }
     }
 
     private class SecurityModel

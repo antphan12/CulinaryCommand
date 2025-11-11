@@ -9,7 +9,6 @@ namespace CulinaryCommand.Models
         public string Phone { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public int Rating { get; set; } = 5;
         public string Website { get; set; } = string.Empty;
     }
 }

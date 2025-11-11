@@ -1,9 +1,10 @@
 ﻿@inject CulinaryCommand.Services.AuthService Auth
 @inject NavigationManager NavigationManager
-@inherits LayoutComponentBase
-@using CulinaryCommand.Services
 
-<!-- TODO: This component still needs to integrate restaurants with the backend, they're just hardcoded right now -->
+@inherits LayoutComponentBase
+@using CulinaryCommand.Models
+@using CulinaryCommand.Services
+@inject ManagerSessionManager SessionManager
 
 <div class="page">
     <!-- Sidebar -->
@@ -40,9 +41,9 @@
                                 class="dropdown-item d-flex justify-content-between align-items-center @(currentRestaurant == restaurant ? "active" : "")">
                                 <span class="flex-grow-1" style="cursor: pointer;"
                                     @onclick="() => ChangeRestaurant(restaurant)">
-                                    @restaurant
+                                    @restaurant.Name
                                 </span>
-                                <button class="btn btn-link p-0 ms-2 edit-btn" title="Edit @restaurant"
+                                <button class="btn btn-link p-0 ms-2 edit-btn" title="Edit @restaurant.Name"
                                     @onclick="() => EditRestaurant(restaurant)" @onclick:stopPropagation="true">
                                     <i class="bi bi-pencil-fill fs-9 text-muted"></i>
                                 </button>
@@ -97,19 +98,19 @@
 </div>
 
 @code {
-    private string currentRestaurant = "Downtown Bistro";
 
-    private List<string> restaurants = new()
-{
-"Downtown Bistro",
-"Uptown Cafe",
-"Light Deli"
-};
+    private List<RestaurantModel> restaurants => SessionManager.Restaurants ?? new List<RestaurantModel>();
+    
+    private RestaurantModel? currentRestaurant;
 
     protected override async Task OnInitializedAsync()
     {
         Auth.OnAuthStateChanged += RefreshLayout;
         await Auth.EnsureInitializedAsync();
+
+        if (restaurants.Any()) {
+            currentRestaurant = restaurants.First();
+        }
     }
 
     private void RefreshLayout() => InvokeAsync(StateHasChanged);
@@ -125,15 +126,15 @@
         NavigationManager.NavigateTo("/signin", true);
     }
 
-    private void EditRestaurant(string restaurant)
+    private void EditRestaurant(RestaurantModel restaurant)
     {
-        Console.WriteLine($"Editing {restaurant}");
-        NavigationManager.NavigateTo($"/settings/restaurants", forceLoad: false);
+        Console.WriteLine($"Editing {restaurant.Name}");
+        NavigationManager.NavigateTo($"/settings/restaurants?restaurant={restaurant.Id}", forceLoad: false);
     }
 
-    private void ChangeRestaurant(string restaurant)
+    private void ChangeRestaurant(RestaurantModel restaurant)
     {
-        Console.WriteLine($"Editing {restaurant}");
+        Console.WriteLine($"Editing restaurant {restaurant.Name}");
         currentRestaurant = restaurant;
         NavigationManager.NavigateTo($"/dashboard", forceLoad: false);
     }

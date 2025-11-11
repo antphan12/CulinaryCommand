@@ -1,6 +1,7 @@
 using CulinaryCommand.Models;
-    
+
 //possibly use this component to manage state for a logged in owner/manager
+// this can be refactored to however the backend needs it -ryan
 namespace CulinaryCommand.Services
 {
     public class ManagerSessionManager
@@ -9,6 +10,7 @@ namespace CulinaryCommand.Services
         public string? ManagerId { get; set; }
         public string? ManagerName { get; set; }
 
+        //replace in the future with a call to the database to get associated restaurants
         public List<RestaurantModel> Restaurants = new()
         {
             new RestaurantModel
