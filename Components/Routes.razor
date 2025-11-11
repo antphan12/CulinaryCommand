@@ -1,16 +1,15 @@
-﻿@namespace CulinaryCommand.Components
-@inject AuthService Auth
+﻿@* @namespace CulinaryCommand.Components
+@inject CulinaryCommand.Services.AuthService Auth
+@rendermode InteractiveServer
 
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         @if (routeData.PageType == typeof(CulinaryCommand.Components.Pages.SignIn))
         {
-            <!-- Render these pages with NO layout -->
             <RouteView RouteData="@routeData" />
         }
         else
         {
-            <!-- Everything else uses MainLayout -->
             <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
         }
     </Found>
@@ -25,13 +24,21 @@
 @code {
     private bool _initialized;
 
+    // Only call JS after the app is interactive (not during prerender)
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && !_initialized)
         {
-            await Auth.EnsureInitializedAsync();
-            _initialized = true;
-            StateHasChanged();
+            try
+            {
+                await Auth.InitializeFromJsAsync();   // the safe JS version
+                _initialized = true;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Auth init failed (App): {ex.Message}");
+            }
         }
     }
-}
+} *@
