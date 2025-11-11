@@ -90,7 +90,7 @@
         signInModel = new() { Role = Roles.Manager.ToString() }; // Default to manager
         if (Auth.IsSignedIn)
         {
-            Nav.NavigateTo("/dashboard", true);
+            Nav.NavigateTo("/dashboard");
         }
     }
 
@@ -103,9 +103,10 @@
         User? user = await UserService.ValidateCredentialsAsync(signInModel.Username, signInModel.Password);
         if (user != null)
         {
-            await Auth.SignInAsync(signInModel.Username, signInModel.Role);
-            Nav.NavigateTo("/dashboard", true);
+            await Auth.SignInAsync(user);
+            Nav.NavigateTo("/dashboard");
         }
+
         else
         {
             Console.WriteLine(value: $"NOT VALID");
@@ -119,7 +120,7 @@
 
     private class SignInModel 
     {
-        public string Role { get; set; } = Roles.Manager.ToString();           // Enum example
+        public string Role { get; set; } 
         public string Username { get; set; }
         public string Password { get; set; }
         public bool RememberMe { get; set; } = false;
