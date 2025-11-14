@@ -97,7 +97,7 @@
     private async Task HandleSubmit() 
     {
         Console.WriteLine($"Role: {signInModel.Role}");
-        Console.WriteLine($"Username: {signInModel.Email}");
+        Console.WriteLine($"Email: {signInModel.Email}");
         Console.WriteLine($"Password: {signInModel.Password}");
         Console.WriteLine($"Remember Me: {signInModel.RememberMe}");
         User? user = await UserService.ValidateCredentialsAsync(signInModel.Email, signInModel.Password);
