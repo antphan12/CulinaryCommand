@@ -23,7 +23,7 @@ namespace CulinaryCommand.Services
         Task<bool> RemoveManagerFromLocationAsync(int locationId, int managerId);
         Task<List<User>> GetManagersForLocationAsync(int locationId);
 
-        Task<List<Location>> GetLocationsByManagerAsync(int managerId);
+        Task<List<Location>> GetLocationsByManagerAsync(int? managerId);
     }
 
     public class LocationService : ILocationService
@@ -133,7 +133,7 @@ namespace CulinaryCommand.Services
             return location?.Managers.ToList() ?? new List<User>();
         }
 
-        public async Task<List<Location>> GetLocationsByManagerAsync(int managerId)
+        public async Task<List<Location>> GetLocationsByManagerAsync(int? managerId)
         {
             return await _context.Locations
             .Where(l => l.Managers.Any(m => m.Id == managerId))

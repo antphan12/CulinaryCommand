@@ -6,24 +6,33 @@ namespace CulinaryCommand.Services
     public class AuthService
     {
         private readonly IJSRuntime _js;
+        private readonly ILocationService _locationService;
         private bool _hydrated;
 
-        public AuthService(IJSRuntime js) { _js = js; }
+        public AuthService(IJSRuntime js, ILocationService locationService) 
+        {
+            _js = js;
+            _locationService = locationService;
+        }
 
         public bool IsSignedIn { get; private set; }
         public User? CurrentUser { get; private set; }
         public string? UserEmail { get; private set; }
-        public int UserId { get; private set; }
+        public int? UserId { get; private set; }
         public string? UserRole { get; private set; }
         public string? Company { get; private set; }
         public string? CompanyCode { get; private set; }
-        public string? Location { get; private set; }
+
+        // list of locations this user MANAGES
+        public ICollection<Location>? ManagedLocations { get; set; }
+
+        // list of locations this user WORKS at
+        public ICollection<Location> Locations { get; set; }
+        //
+        public Location CurrentLocation { get; set; }
 
         public event Action? OnAuthStateChanged;
         private void Raise() => OnAuthStateChanged?.Invoke();
-
-        public List<string>? Locations { get; set; }
-
         public void NotifyStateChanged() => OnAuthStateChanged?.Invoke();
 
 
@@ -32,14 +41,20 @@ namespace CulinaryCommand.Services
             if (_hydrated) return;
             try
             {
-                UserId = await _js.InvokeAsync<int>("localStorage.getItem", "cc_userId");
-                UserEmail = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_user");
+                var idString = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_userId");
+                UserId = int.TryParse(idString, out var parsed) ? parsed : null;
+                UserEmail = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_email");
                 UserRole = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_role");
                 Company = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_company");
                 CompanyCode = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_companyCode");
-                Location = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_location");
 
                 IsSignedIn = !string.IsNullOrEmpty(UserEmail);
+
+                if (IsSignedIn && UserId != null)
+                {
+                    ManagedLocations = await _locationService.GetLocationsByManagerAsync(UserId.Value);
+                    CurrentLocation = ManagedLocations?.FirstOrDefault();
+                }
             }
             catch
             {
@@ -61,25 +76,31 @@ namespace CulinaryCommand.Services
             UserRole = user.Role;
             Company = user.Company?.Name;
             CompanyCode = user.Company?.CompanyCode;
-            Locations = user.Locations?.Select(l => l.Name).ToList();
-            Location = user.Locations.FirstOrDefault()?.Name;
+            // still need to implement the user methods in LocationService
+            // Locations = user.Locations?.Select(l => l.Name).ToList();
+            ManagedLocations = await _locationService.GetLocationsByManagerAsync(user.Id);
             IsSignedIn = true;
 
+            await _js.InvokeVoidAsync("localStorage.setItem", "cc_userId", UserId?.ToString() ?? "");
             await _js.InvokeVoidAsync("localStorage.setItem", "cc_email", UserEmail ?? "");
             await _js.InvokeVoidAsync("localStorage.setItem", "cc_role", UserRole ?? "");
             await _js.InvokeVoidAsync("localStorage.setItem", "cc_company", Company ?? "");
             await _js.InvokeVoidAsync("localStorage.setItem", "cc_companyCode", CompanyCode ?? "");
-            await _js.InvokeVoidAsync("localStorage.setItem", "cc_location", Location ?? "");
+
             Raise();
         }
 
         public async Task LogoutAsync()
         {
             CurrentUser = null;
-            UserRole = Company = CompanyCode = Location = null;
+            UserEmail = UserRole = Company = CompanyCode = null;
+            UserId = null;
+            ManagedLocations = null;
             IsSignedIn = false;
 
-            await _js.InvokeVoidAsync("localStorage.removeItem", "cc_user");
+            await _js.InvokeVoidAsync("localStorage.removeItem", "cc_userId");
+
+            await _js.InvokeVoidAsync("localStorage.removeItem", "cc_email");
             await _js.InvokeVoidAsync("localStorage.removeItem", "cc_role");
             await _js.InvokeVoidAsync("localStorage.removeItem", "cc_company");
             await _js.InvokeVoidAsync("localStorage.removeItem", "cc_companyCode");
@@ -89,20 +110,19 @@ namespace CulinaryCommand.Services
 
         public async Task<string?> GetUser()
         {
-            return await _js.InvokeAsync<string?>("localStorage.getItem", "cc_user");
+            return await _js.InvokeAsync<string?>("localStorage.getItem", "cc_email");
         }
 
         public async Task<bool> IsUserSignedIn()
         {
-            string? User = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_user");
+            string? User = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_email");
             return User != null ? true : false;
         }
 
-        public async Task UpdateLocation(string newLoc)
+        public void UpdateLocation(Location loc)
         {
-            this.Location = newLoc;
-            await _js.InvokeVoidAsync("localStorage.setItem", "cc_location", this.Location ?? "");
+            CurrentLocation = loc;
+            NotifyStateChanged();
         }
-
     }
 }
