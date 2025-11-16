@@ -1,6 +1,7 @@
 @using CulinaryCommand.Models
 @using CulinaryCommand.Services
 @using CulinaryCommand.Data.Entities
+@using System.Xml
 @inject AuthService Auth
 
 @inject ILocationService LocationService
@@ -48,7 +49,7 @@
             style="background-color:#d3ddd5; width:2.5rem; height:2.5rem; border-radius:0.45rem;">
             <i class="bi bi-building fs-4" style="color:#688f72;"></i>
         </div>
-        <span>@currentRestaurant</span>
+        <span>@(CurrentLocation?.Name ?? "Select Location")</span>
     </button>
 
     <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="businessMenu">
@@ -56,8 +57,8 @@
             <h6 class="dropdown-header">Restaurants</h6>
         </li>
 
-        @foreach (Location location in ManagedLocations)
-        {
+            @foreach (Location location in ManagedLocations ?? Enumerable.Empty<Location>())
+            {
             <li>
                 <div
                     class="dropdown-item d-flex justify-content-between align-items-center @(currentRestaurant == location ? "active" : "")">
@@ -81,30 +82,66 @@
     private Location? CurrentLocation;
     private Location? currentRestaurant;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // load user from localStorage
+            await Auth.InitializeFromJsAsync();
 
+            // load their locations once UserId is known
+            if (Auth.UserId.HasValue)
+            {
+                ManagedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId.Value);
+            }
+
+            // restore CurrentLocation
+            if (Auth.CurrentLocation == null)
+            {
+                var locName = await JS.InvokeAsync<string>("localStorage.getItem", "cc_location");
+                if (!string.IsNullOrEmpty(locName))
+                {
+                    CurrentLocation = ManagedLocations.FirstOrDefault(l => l.Name == locName);
+                }
+            }
+            else
+            {
+                CurrentLocation = Auth.CurrentLocation;
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    /*
     protected override async Task OnInitializedAsync()
     {
 
 
         // Load from Auth (or localStorage if needed)
-        await Auth.InitializeFromJsAsync();
-        CurrentLocation = Auth.CurrentLocation;
+        @* await Auth.InitializeFromJsAsync(); *@
+        @* CurrentLocation = Auth.CurrentLocation; *@
 
         // For now, just mock multiple locations if needed
         @* Locations = Auth.Locations ?? new List<string> { CurrentLocation ?? "Main Location" }; *@
 
-        ManagedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId);
-
-        StateHasChanged();
-
+        if (Auth.UserId.HasValue)
+        {
+            ManagedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId.Value);
+        }
+        else
+        {
+            ManagedLocations = new List<Location>();
+        }
     }
+    */
 
     private async Task ChangeLocation(Location newLoc)
     {
         CurrentLocation = newLoc;
         Auth.UpdateLocation(newLoc);
-        await JS.InvokeVoidAsync("localStorage.setItem", "cc_location", newLoc);
-        NavigationManager.NavigateTo($"/dashboard", forceLoad: false);
+        await JS.InvokeVoidAsync("localStorage.setItem", "cc_location", newLoc?.Name ?? "");
+        NavigationManager.NavigateTo($"/dashboard", forceLoad: true);
         Auth.NotifyStateChanged();
     }
 
