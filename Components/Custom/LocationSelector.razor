@@ -57,7 +57,7 @@
             <h6 class="dropdown-header">Restaurants</h6>
         </li>
 
-        @foreach (Location location in LocationState.ManagedLocations ?? Enumerable.Empty<Location>())
+        @foreach (Location location in ManagedLocations ?? Enumerable.Empty<Location>())
         {
             <li>
                 <div
@@ -76,8 +76,8 @@
 </div>
 
 @code {
-    private List<string> Locations = new();
-    @* private List<Location> ManagedLocations { get; set; } = new(); *@
+    @* private List<string> Locations = new(); *@
+    private List<Location> ManagedLocations { get; set; } = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -85,6 +85,7 @@
         {
             // load user from localStorage
             await Auth.InitializeFromJsAsync();
+            if (!Auth.UserId.HasValue) return;
 
             // load their locations once UserId is known
             @* if (Auth.UserId.HasValue)

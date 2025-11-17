@@ -1,5 +1,6 @@
 @using CulinaryCommand.Services
 @inject AuthService Auth
+@inject IJSRuntime JS
 @inject NavigationManager Nav
 @rendermode InteractiveServer
 
@@ -36,9 +37,43 @@
 </div>
 
 @code {
+    private string UserEmail = "Guest";
+    private string UserRole = "";
+    private string Company = "";
+    private bool _hydrated = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_hydrated)
+        {
+            // Load from localStorage
+            UserEmail = await JS.InvokeAsync<string>("localStorage.getItem", "cc_email") ?? "Guest";
+            UserRole = await JS.InvokeAsync<string>("localStorage.getItem", "cc_role") ?? "";
+            Company = await JS.InvokeAsync<string>("localStorage.getItem", "cc_company") ?? "";
+
+            // Subscribe to AuthService changes
+            Auth.OnAuthStateChanged += Refresh;
+
+            _hydrated = true;
+            StateHasChanged();
+        }
+    }
+
+    private void Refresh() => InvokeAsync(StateHasChanged);
+
     private async Task Logout()
     {
         await Auth.LogoutAsync();
+
+        await JS.InvokeVoidAsync("localStorage.removeItem", "cc_email");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "cc_role");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "cc_company");
+
         Nav.NavigateTo("/signin", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        Auth.OnAuthStateChanged -= Refresh;
     }
 }
