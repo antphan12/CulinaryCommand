@@ -59,7 +59,7 @@
     <ul class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="businessMenu">
         @if (ManagedLocations.Any()) {
             <li>
-                <h6 class="dropdown-header">Restaurants</h6>
+                <h6 class="dropdown-header">Locations</h6>
             </li>
 
 
@@ -154,7 +154,7 @@
     private void EditRestaurant(Location restaurant)
     {
         Console.WriteLine($"Editing {restaurant.Name}");
-        NavigationManager.NavigateTo($"/settings/restaurants/{restaurant.Id}", forceLoad: false);
+        NavigationManager.NavigateTo($"/settings/locations/{restaurant.Id}", forceLoad: false);
     }
 
     private void AddRestaurant() {

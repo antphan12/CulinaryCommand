@@ -1,4 +1,10 @@
 @rendermode InteractiveServer
+@inject IJSRuntime JS
+@inject ILocationService LocationService
+@inject LocationState LocationState
+@inject AuthService Auth
+@using CulinaryCommand.Data.Entities
+
 <div class="manager-dashboard">
     <h2 class="mb-4 text-primary">Manager Dashboard</h2>
     @if (LocationState.CurrentLocation is null)
@@ -55,7 +61,58 @@
 
 
 @code {
-    [Inject] private CulinaryCommand.Services.AuthService Auth { get; set; } = default!;
-        [Inject] private CulinaryCommand.Services.LocationState LocationState { get; set; } = default!;
+    private bool _initializedFromJS = false;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //hydrate from localStorage IMMEDIATELY
+            await LoadLocationFromLocalStorage();
+
+            //background refresh to sync/validate with server
+            _ = RefreshLocationFromServer();
+        }
+    }
+
+    private async Task LoadLocationFromLocalStorage()
+    {
+        string? idStr = await JS.InvokeAsync<string?>("localStorage.getItem", "cc_currentLocation");
+
+        if (int.TryParse(idStr, out int id) && id > 0)
+        {
+            Location? cached = await LocationService.GetLocationByIdAsync(id);
+            LocationState.SetCurrentLocation(cached);
+        }
+        else
+        {
+            LocationState.SetCurrentLocation(null);
+        }
+
+        _initializedFromJS = true;
+        StateHasChanged(); // re-render after local hydration
+    }
+
+    private async Task RefreshLocationFromServer()
+    {
+        if (LocationState.CurrentLocation == null)
+            return;
+
+        int id = LocationState.CurrentLocation.Id;
+
+        var fresh = await LocationService.GetLocationByIdAsync(id);
+
+        if (fresh != null)
+        {
+            LocationState.SetCurrentLocation(fresh);
+        }
+        else
+        {
+            // Location removed or permission revoked
+            await JS.InvokeVoidAsync("localStorage.removeItem", "cc_currentLocation");
+            LocationState.SetCurrentLocation(null!);
+        }
+
+        StateHasChanged();
+    }
 }

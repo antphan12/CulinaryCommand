@@ -43,8 +43,8 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link @(ActiveTab == "restaurants" ? "active" : "")"
-                    @onclick="@(() => NavigateToTab("restaurants"))" type="button">
+                <button class="nav-link @(ActiveTab == "locations" ? "active" : "")"
+                    @onclick="@(() => NavigateToTab("locations"))" type="button">
                     <i class="bi bi-fork-knife me-2"></i>Locations
                 </button>
             </li>
@@ -448,8 +448,8 @@
                 </div>
             }
 
-            <!-- Restaurants Tab -->
-            @if (ActiveTab == "restaurants")
+            <!-- Locations Tab -->
+            @if (ActiveTab == "locations")
             {
 
                 <div class="tab-pane active">
@@ -467,7 +467,7 @@
                                 <div class="row g-3">
                                     @foreach (Location r in managedLocations)
                                     {
-                                        <div class="col-md-6 col-lg-4">
+                                        <div class="col-md-6 col-lg-3">
                                             <div class="card shadow-sm border-0 h-100 d-flex flex-column">
                                                 <div class="card-body d-flex flex-column">
                                                     <div>
@@ -491,8 +491,7 @@
 
                                     }
                                     <div class="col-md-6 col-lg-4">
-                                        <button class="btn btn-secondary btn-sm" 
-                                        @onclick="() => AddLocation()">
+                                        <button class="btn btn-secondary btn-sm" @onclick="() => AddLocation()">
                                             <i class="bi bi-square-plus me-1"></i>Add location
                                         </button>
                                     </div>
@@ -502,27 +501,31 @@
                             {
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <div class="alert alert-info">
-                                        You don’t manage any restaurant locations yet.
+                                        You don’t manage any locations yet.
                                     </div>
                                     <div class="mx-3">
-                                        <button class="btn btn-secondary btn-sm" 
-                                        @onclick="() => AddLocation()">
+                                        <button class="btn btn-secondary btn-sm" @onclick="() => AddLocation()">
                                             <i class="bi bi-square-plus me-1"></i>Add location
                                         </button>
                                     </div>
                                 </div>
                             }
-                            
+
                         </div>
                     }
-                    else if (Specifier == "add") {
-                        @*add the add menu here later*@
+                    @* LOCATION ADD FORM *@
+                    else if (Specifier == "add")
+                    {
+                        <h4 class="mb-4">
+                            Create Location
+                        </h4>
+
                         <EditForm Model="@locationModel" OnValidSubmit="@HandleLocationCreate">
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label for="restaurantName" class="form-label">Restaurant Name</label>
-                                    <InputText id="restaurantName" class="form-control" @bind-Value="locationModel.Name"
-                                        placeholder="Enter restaurant name" />
+                                    <label for="locationName" class="form-label">Location Name</label>
+                                    <InputText id="locationName" class="form-control" @bind-Value="locationModel.Name"
+                                        placeholder="Enter location name" />
                                 </div>
                                 <div class="col-md-6">
                                     <label for="address" class="form-label">Address</label>
@@ -565,9 +568,9 @@
                         <EditForm Model="@locationModel" OnValidSubmit="@HandleLocationSubmit">
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label for="restaurantName" class="form-label">Restaurant Name</label>
-                                    <InputText id="restaurantName" class="form-control" @bind-Value="currentLocation.Name"
-                                        placeholder="Enter restaurant name" />
+                                    <label for="locationName" class="form-label">Location Name</label>
+                                    <InputText id="locationName" class="form-control" @bind-Value="currentLocation.Name"
+                                        placeholder="Enter location name" />
                                 </div>
                                 <div class="col-md-6">
                                     <label for="address" class="form-label">Address</label>
@@ -616,7 +619,7 @@
     @* public int? RestaurantId { get; set; } *@
     private Location currentLocation { get; set; } = new();
     private List<Location> managedLocations { get; set; } = new();
-    private bool _addingLocation {get; set;} = false;
+    private bool _addingLocation { get; set; } = false;
 
     private string ActiveTab => Tab?.ToLower() ?? "profile";
 
@@ -631,42 +634,39 @@
     private LocationModel locationModel = new();
 
 
-    private bool _initialized = false;
+    private bool _hydratedFromLocalStorage = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await PopulateLocations();
+            
 
-            if (Specifier != null && ActiveTab == "restaurants")
+            if (Specifier != null && ActiveTab == "locations")
             {
-                if (Specifier != "add") {
+                if (Specifier != "add")
+                {
                     await LoadRestaurant(int.Parse(Specifier));
                 }
             }
 
-            _initialized = true;
+            _ = PopulateLocations();
 
-            StateHasChanged();
+            _initialized = true;
         }
     }
 
-
-    protected override void  OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (string.IsNullOrEmpty(Tab))
         {
             NavigationManager.NavigateTo("/settings/profile");
         }
-        else if (string.IsNullOrEmpty(Specifier))
-        {
-            NavigationManager.NavigateTo($"/settings/{Tab}");
-        }
 
-        @* if (string.IsNullOrEmpty(Tab2)) {
-            NavigationManager.NavigateTo("")
-        } *@
+        // put locations into localStorage
+        if (Auth.UserId != null){
+            await LocationService.LoadAndPersistLocationsAsync(Auth.UserId.Value);
+        }
 
         // Initialize with default/current user data
         profileModel = new ProfileModel
@@ -704,6 +704,32 @@
 
     }
 
+    private async Task LoadRestaurant(int locationId)
+    {
+        // TODO: Load from database based on locationId
+        // For now, using SessionManager as example
+        currentLocation = await LocationService.GetLocationByIdAsync(locationId);
+        Console.WriteLine("loading location : " + currentLocation.Name);
+        if (currentLocation != null)
+        {
+            locationModel = new LocationModel
+            {
+                Id = currentLocation.Id,
+                Name = currentLocation.Name,
+                Address = currentLocation.Address,
+                City = currentLocation.City,
+                State = currentLocation.State,
+                ZipCode = currentLocation.ZipCode,
+                MarginEdgeKey = currentLocation.MarginEdgeKey
+            };
+        }
+        else
+        {
+            // Location not found, initialize empty model
+            locationModel = new LocationModel();
+        }
+    }
+
     private async Task PopulateLocations()
     {
         var userIdString = await Auth.GetUser();
@@ -716,6 +742,7 @@
             managedLocations = new List<Location>();
             Console.WriteLine($"Failed to parse signed-in user id: '{userIdString}'");
         }
+        StateHasChanged();
     }
 
     private void NavigateToTab(string tab)
@@ -760,14 +787,16 @@
     private async Task HandleLocationSubmit()
     {
         Console.WriteLine($"Location updated: {locationModel.Name}");
-        NavigationManager.NavigateTo("/settings/restaurants");
+        NavigationManager.NavigateTo("/settings/locations");
         // TODO: Add actual database update logic or API call
         @* LocationService. *@
     }
 
-    private async Task HandleLocationCreate() {
+    private async Task HandleLocationCreate()
+    {
 
-        if (Auth.UserId != null) {
+        if (Auth.UserId != null)
+        {
             Location newLocation = new Location
             {
                 Name = locationModel.Name,
@@ -776,14 +805,16 @@
                 State = locationModel.State,
                 ZipCode = locationModel.ZipCode,
             };
-                await LocationService.CreateLocationAsync(newLocation, Auth.UserId.Value);
-            NavigationManager.NavigateTo("/settings/restaurants");
+            await LocationService.CreateLocationAsync(newLocation, Auth.UserId.Value);
+            NavigationManager.NavigateTo("/settings/locations");
         }
-
     }
-    private void AddLocation() {
-        NavigationManager.NavigateTo("/settings/restaurants/add");
 
+    private void AddLocation()
+    {
+        NavigationManager.NavigateTo("/settings/locations/add");
+
+        locationModel = new LocationModel();
     }
 
     private void ExportData()
@@ -810,36 +841,10 @@
         // TODO: Add account deletion logic here
     }
 
-    private async Task LoadRestaurant(int locationId)
-    {
-        // TODO: Load from database based on restaurantId
-        // For now, using SessionManager as example
-        currentLocation = await LocationService.GetLocationByIdAsync(locationId);
-        Console.WriteLine("loading restaurant : " + currentLocation.Name);
-        if (currentLocation != null)
-        {
-            locationModel = new LocationModel
-            {
-                Id = currentLocation.Id,
-                Name = currentLocation.Name,
-                Address = currentLocation.Address,
-                City = currentLocation.City,
-                State = currentLocation.State,
-                ZipCode = currentLocation.ZipCode,
-                MarginEdgeKey = currentLocation.MarginEdgeKey
-            };
-        }
-        else
-        {
-            // Restaurant not found, initialize empty model
-            locationModel = new LocationModel();
-        }
-    }
-
     private async Task EditLocation(Location location)
     {
         await LoadRestaurant(location.Id);
-        NavigationManager.NavigateTo($"/settings/restaurants/{location.Id}");
+        NavigationManager.NavigateTo($"/settings/locations/{location.Id}");
 
     }
 

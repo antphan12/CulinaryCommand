@@ -167,6 +167,13 @@ namespace CulinaryCommand.Services
             // 3. Save into localStorage
             var json = JsonSerializer.Serialize(locations);
             await _js.InvokeVoidAsync("localStorage.setItem", "cc_locations", json);
+
+            Location? currentLocation = _locationState.CurrentLocation;
+            if (currentLocation != null)
+            {
+                await _js.InvokeVoidAsync("localStorage.setItem", "cc_currentLocation", currentLocation.Id);
+
+            }
         }
     }
 }
