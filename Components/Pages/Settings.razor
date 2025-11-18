@@ -453,11 +453,14 @@
             {
 
                 <div class="tab-pane active">
+
                     @if (!RestaurantId.HasValue)
                     {
                         <h4 class="mb-4">
                             Manage Restaurants
                         </h4>
+
+                        @* LOCAITON CARD LIST PAGE *@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             @if (managedLocations?.Count > 0)
                             {
@@ -489,16 +492,21 @@
                                     }
                                 </div>
                             }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    You don’t manage any restaurant locations yet.
+                                </div>
+                            }
                         </div>
                     }
                     else
                     {
-
-
                         <h4 class="mb-4">
                             Location Information
                         </h4>
 
+                        @* LOCAITON EDIT FORM *@
                         <EditForm Model="@locationModel" OnValidSubmit="@HandleLocationSubmit">
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -507,29 +515,29 @@
                                         placeholder="Enter restaurant name" />
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="city" class="form-label">City</label>
-                                    <InputText id="city" class="form-control" @bind-Value="currentLocation.City"
-                                        placeholder="Enter a city" />
+                                    <label for="address" class="form-label">Address</label>
+                                    <InputText id="address" class="form-control" @bind-Value="currentLocation.Address"
+                                        placeholder="Enter an address" />
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Address</label>
-                                <InputText id="address" class="form-control" @bind-Value="currentLocation.Address"
-                                    placeholder="123 Main Street" />
-                            </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label for="city" class="form-label">City</label>
+                                    <InputText id="city" class="form-control" @bind-Value="currentLocation.City"
+                                        placeholder="Enter an city" />
+                                </div>
+                                <div class="col-md-4">
                                     <label for="state" class="form-label">State</label>
                                     <InputText id="state" class="form-control" @bind-Value="currentLocation.State"
                                         placeholder="Enter a state" />
                                 </div>
-                                @* <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <InputText id="email" type="email" class="form-control" @bind-Value="restaurantModel.Email"
-                                    placeholder="contact@restaurant.com" />
-                            </div> *@
+                                <div class="col-md-4">
+                                    <label for="zipcode" class="form-label">Postal Code</label>
+                                    <InputText id="zipcode" class="form-control" @bind-Value="currentLocation.ZipCode"
+                                        placeholder="Enter a postal code" />
+                                </div>
                             </div>
 
                             @* <div class="mb-3">
@@ -598,13 +606,12 @@
     }
 
 
-    protected override void OnInitialized()
+    protected override void  OnInitialized()
     {
         if (string.IsNullOrEmpty(Tab))
         {
             NavigationManager.NavigateTo("/settings/profile");
         }
-
 
         // Initialize with default/current user data
         profileModel = new ProfileModel
@@ -700,7 +707,7 @@
         Console.WriteLine($"Location updated: {locationModel.Name}");
         NavigationManager.NavigateTo("/settings/restaurants");
         // TODO: Add actual database update logic or API call
-        LocationService.
+        @* LocationService. *@
     }
 
     private void ExportData()
@@ -732,6 +739,7 @@
         // TODO: Load from database based on restaurantId
         // For now, using SessionManager as example
         currentLocation = await LocationService.GetLocationByIdAsync(restaurantId);
+        Console.WriteLine("loading restaurant : " + currentLocation.Name);
         if (currentLocation != null)
         {
             locationModel = new LocationModel
@@ -752,8 +760,9 @@
         }
     }
 
-    private void EditLocation(Location location)
+    private async Task EditLocation(Location location)
     {
+        await LoadRestaurant(location.Id);
         NavigationManager.NavigateTo($"/settings/restaurants?restaurant={location.Id}");
 
     }

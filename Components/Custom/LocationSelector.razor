@@ -82,13 +82,14 @@
         else {
             <li>
                 <div
-                    class="dropdown-item d-flex justify-content-between align-items-center">
+                    class="d-flex justify-content-between align-items-center" 
+                    style="padding: 0.5rem 1rem;  font-size: 0.95rem;">
                     <span class="flex-grow-1" style="cursor: pointer;">
                         No restaurants.
                     </span>
                     <button class="btn btn-link p-0 ms-2 edit-btn" 
                         @onclick="() => AddRestaurant()" @onclick:stopPropagation="true">
-                        <i class="bi bi-add fs-9 text-muted"></i>
+                        <i class="bi bi-plus-square-fill fs-9 text-active"></i>
                     </button>
                 </div>
             </li>
@@ -156,5 +157,7 @@
         NavigationManager.NavigateTo($"/settings/restaurants?restaurant={restaurant.Id}", forceLoad: false);
     }
 
-    private void AddRestaurant() {}
+    private void AddRestaurant() {
+
+    }
 }
