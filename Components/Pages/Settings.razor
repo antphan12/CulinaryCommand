@@ -1,4 +1,4 @@
-@page "/settings/{Tab?}" // Redirect to /settings/profile
+@page "/settings/{Tab?}/{specifier?}" // Redirect to /settings/profile
 @inject NavigationManager NavigationManager
 @inject AuthService Auth
 @inject ILocationService LocationService
@@ -45,7 +45,7 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link @(ActiveTab == "restaurants" ? "active" : "")"
                     @onclick="@(() => NavigateToTab("restaurants"))" type="button">
-                    <i class="fas fa-utensils me-2"></i>Restaurants
+                    <i class="bi bi-fork-knife me-2"></i>Locations
                 </button>
             </li>
         </ul>
@@ -457,7 +457,7 @@
                     @if (!RestaurantId.HasValue)
                     {
                         <h4 class="mb-4">
-                            Manage Restaurants
+                            Manage Locations
                         </h4>
 
                         @* LOCAITON CARD LIST PAGE *@
@@ -490,15 +490,31 @@
                                         </div>
 
                                     }
+                                    <div class="col-md-6 col-lg-4">
+                                        <button class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-edit me-1"></i>Add location
+                                        </button>
+                                    </div>
                                 </div>
                             }
                             else
                             {
-                                <div class="alert alert-info">
-                                    You don’t manage any restaurant locations yet.
+                                <div class="d-flex justify-content-between align-items-center mb-4">
+                                    <div class="alert alert-info">
+                                        You don’t manage any restaurant locations yet.
+                                    </div>
+                                    <div class="mx-3">
+                                        <button class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-edit me-1"></i>Add location
+                                        </button>
+                                    </div>
                                 </div>
                             }
+                            
                         </div>
+                    }
+                    else if (true) {
+                        
                     }
                     else
                     {
@@ -540,20 +556,6 @@
                                 </div>
                             </div>
 
-                            @* <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <InputTextArea id="description" class="form-control" @bind-Value="restaurantModel.Description"
-                                placeholder="Short description or notes about the restaurant" rows="3" />
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="website" class="form-label">Website</label>
-                                <InputText id="website" class="form-control" @bind-Value="restaurantModel.Website"
-                                    placeholder="https://example.com" />
-                            </div>
-                        </div> *@
-
                             <button type="submit" class="btn btn-success settings-btn">
                                 <i class="bi bi-save me-2"></i>Save Changes
                             </button>
@@ -568,11 +570,13 @@
 @code {
     [Parameter]
     public string? Tab { get; set; }
+    public string? specifier { get; set; }
 
     [SupplyParameterFromQuery(Name = "restaurant")]
     public int? RestaurantId { get; set; }
     private Location currentLocation { get; set; } = new();
     private List<Location> managedLocations { get; set; } = new();
+    private bool _addingLocation {get; set;} = false;
 
     private string ActiveTab => Tab?.ToLower() ?? "profile";
 
@@ -585,6 +589,7 @@
     private NotificationModel notificationModel = new();
     private PreferencesModel preferencesModel = new();
     private LocationModel locationModel = new();
+
 
     private bool _initialized = false;
 
@@ -611,6 +616,10 @@
         if (string.IsNullOrEmpty(Tab))
         {
             NavigationManager.NavigateTo("/settings/profile");
+        }
+
+        if (string.IsNullOrEmpty(Tab2)) {
+            NavigationManager.NavigateTo(/)
         }
 
         // Initialize with default/current user data
@@ -702,12 +711,23 @@
         // TODO: Add actual preferences update logic here
     }
 
-    private void HandleLocationSubmit()
+    private async Task HandleLocationSubmit()
     {
         Console.WriteLine($"Location updated: {locationModel.Name}");
         NavigationManager.NavigateTo("/settings/restaurants");
         // TODO: Add actual database update logic or API call
         @* LocationService. *@
+    }
+
+    private async Task HandleLocationCreate(Location location) {
+        await LocationService.CreateLocationAsync(location);
+        
+        _addingLocation = false;
+    }
+    private void AddLocation() {
+        _addingLocation = true;
+        NavigationManager.NavigateTo("/settings/restaurants/add")
+
     }
 
     private void ExportData()
@@ -766,6 +786,8 @@
         NavigationManager.NavigateTo($"/settings/restaurants?restaurant={location.Id}");
 
     }
+
+
 
     private class SecurityModel
     {

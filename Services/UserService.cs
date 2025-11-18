@@ -69,6 +69,7 @@ namespace CulinaryCommand.Services
             {
                 return null;
             }
+            // pass in input password and hashed version stored in the database
             return VerifyPassword(password, user.Password) ? user : null;
         }
 
@@ -84,6 +85,7 @@ namespace CulinaryCommand.Services
         // verifying if the password hashes match
         private bool VerifyPassword(string password, string hashedPassword)
         {
+            // determine the hashed value of the password input by the user
             var hashOfInput = HashPassword(password);
 
             Console.WriteLine("INPUT HASH:     " + hashOfInput);
