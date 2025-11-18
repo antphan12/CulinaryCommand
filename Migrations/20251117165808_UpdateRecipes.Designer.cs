@@ -4,6 +4,7 @@ using CulinaryCommand.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CulinaryCommand.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251117165808_UpdateRecipes")]
+    partial class UpdateRecipes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -309,6 +312,11 @@ namespace CulinaryCommand.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
 
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -402,21 +410,6 @@ namespace CulinaryCommand.Migrations
                     b.ToTable("UserLocations", (string)null);
                 });
 
-            modelBuilder.Entity("LocationUser1", b =>
-                {
-                    b.Property<int>("ManagedLocationsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ManagersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ManagedLocationsId", "ManagersId");
-
-                    b.HasIndex("ManagersId");
-
-                    b.ToTable("LocationManagers", (string)null);
-                });
-
             modelBuilder.Entity("CulinaryCommand.Data.Entities.Location", b =>
                 {
                     b.HasOne("CulinaryCommand.Data.Entities.Company", "Company")
@@ -507,21 +500,6 @@ namespace CulinaryCommand.Migrations
                     b.HasOne("CulinaryCommand.Data.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LocationUser1", b =>
-                {
-                    b.HasOne("CulinaryCommand.Data.Entities.Location", null)
-                        .WithMany()
-                        .HasForeignKey("ManagedLocationsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CulinaryCommand.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("ManagersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
