@@ -22,9 +22,6 @@ namespace CulinaryCommand.Data.Entities
         [Required, MaxLength(128)]
         public string? Role { get; set; } 
 
-        [Required, MaxLength(128)]
-        public string? Location { get; set; }
-
         public int? CompanyId { get; set; }
 
         public Company? Company { get; set; }
@@ -32,11 +29,8 @@ namespace CulinaryCommand.Data.Entities
         // Navigation property for UserStation experience
         public string? StationsWorked { get; set; }
 
-        public ICollection<Location> Locations { get; set; } = new List<Location>();
-
+        public ICollection<UserLocation> UserLocations { get; set; } = new List<UserLocation>();
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }
-
-

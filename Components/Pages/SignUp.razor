@@ -154,16 +154,16 @@
             }
 
             // continue to create user
-            var user = await UserService.CreateUserAsync(
+            @* var user = await UserService.CreateUserAsync(
                 signUpModel.FullName,
                 signUpModel.Email,
                 signUpModel.Password,
                 signUpModel.Role
-            );
+            ); *@
 
-            if (user == null)
+            if (true)
             {
-                errorMessage = "A user with this email already exists.";
+                errorMessage = "Sign up logic is different, check it. A user with this email already exists.";
                 isSubmitting = false;
                 return;
             }

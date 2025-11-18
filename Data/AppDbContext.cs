@@ -19,6 +19,7 @@ namespace CulinaryCommand.Data
         public DbSet<Recipe> Recipes => Set<Recipe>();
         public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
         public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
+        public DbSet<UserLocation> UserLocations => Set<UserLocation>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -37,11 +38,18 @@ namespace CulinaryCommand.Data
                 .HasForeignKey(l => l.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 🔹 Many-to-many relationship: User <-> Location
-            modelBuilder.Entity<User>()
-                .HasMany(u => u.Locations)
-                .WithMany(l => l.Users)
-                .UsingEntity(j => j.ToTable("UserLocations"));
+            modelBuilder.Entity<UserLocation>()
+                .HasKey(ul => new { ul.UserId, ul.LocationId });
+
+            modelBuilder.Entity<UserLocation>()
+                .HasOne(ul => ul.User)
+                .WithMany(u => u.UserLocations)
+                .HasForeignKey(ul => ul.UserId);
+
+            modelBuilder.Entity<UserLocation>()
+                .HasOne(ul => ul.Location)
+                .WithMany(l => l.UserLocations)
+                .HasForeignKey(ul => ul.LocationId);
         }
     }  
 }

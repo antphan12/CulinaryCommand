@@ -29,9 +29,8 @@ namespace CulinaryCommand.Data.Entities
         public int CompanyId { get; set; }
         public Company? Company { get; set; }
 
-        public ICollection<User> Users { get; set; } = new List<User>();
+        public ICollection<UserLocation> UserLocations { get; set; } = new List<UserLocation>();
         public ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
     }
 
 }
-
