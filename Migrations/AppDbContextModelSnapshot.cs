@@ -158,6 +158,21 @@ namespace CulinaryCommand.Migrations
                     b.ToTable("Locations");
                 });
 
+            modelBuilder.Entity("CulinaryCommand.Data.Entities.ManagerLocation", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LocationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "LocationId");
+
+                    b.HasIndex("LocationId");
+
+                    b.ToTable("ManagerLocations");
+                });
+
             modelBuilder.Entity("CulinaryCommand.Data.Entities.MeasurementUnit", b =>
                 {
                     b.Property<int>("UnitId")
@@ -318,9 +333,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasMaxLength(12)
-                        .HasColumnType("varchar(12)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -338,6 +351,21 @@ namespace CulinaryCommand.Migrations
                     b.HasIndex("CompanyId");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("CulinaryCommand.Data.Entities.UserLocation", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LocationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "LocationId");
+
+                    b.HasIndex("LocationId");
+
+                    b.ToTable("UserLocations");
                 });
 
             modelBuilder.Entity("CulinaryCommand.Data.Entities.WorkTask", b =>
@@ -385,36 +413,6 @@ namespace CulinaryCommand.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("LocationUser", b =>
-                {
-                    b.Property<int>("LocationsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UsersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("LocationsId", "UsersId");
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("UserLocations", (string)null);
-                });
-
-            modelBuilder.Entity("LocationUser1", b =>
-                {
-                    b.Property<int>("ManagedLocationsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ManagersId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ManagedLocationsId", "ManagersId");
-
-                    b.HasIndex("ManagersId");
-
-                    b.ToTable("LocationManagers", (string)null);
-                });
-
             modelBuilder.Entity("CulinaryCommand.Data.Entities.Location", b =>
                 {
                     b.HasOne("CulinaryCommand.Data.Entities.Company", "Company")
@@ -423,6 +421,25 @@ namespace CulinaryCommand.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("CulinaryCommand.Data.Entities.ManagerLocation", b =>
+                {
+                    b.HasOne("CulinaryCommand.Data.Entities.Location", "Location")
+                        .WithMany("ManagerLocations")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CulinaryCommand.Data.Entities.User", "User")
+                        .WithMany("ManagerLocations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Location");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("CulinaryCommand.Data.Entities.Recipe", b =>
@@ -484,6 +501,25 @@ namespace CulinaryCommand.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("CulinaryCommand.Data.Entities.UserLocation", b =>
+                {
+                    b.HasOne("CulinaryCommand.Data.Entities.Location", "Location")
+                        .WithMany("UserLocations")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CulinaryCommand.Data.Entities.User", "User")
+                        .WithMany("UserLocations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Location");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CulinaryCommand.Data.Entities.WorkTask", b =>
                 {
                     b.HasOne("CulinaryCommand.Data.Entities.User", "User")
@@ -491,36 +527,6 @@ namespace CulinaryCommand.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("LocationUser", b =>
-                {
-                    b.HasOne("CulinaryCommand.Data.Entities.Location", null)
-                        .WithMany()
-                        .HasForeignKey("LocationsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CulinaryCommand.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("LocationUser1", b =>
-                {
-                    b.HasOne("CulinaryCommand.Data.Entities.Location", null)
-                        .WithMany()
-                        .HasForeignKey("ManagedLocationsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CulinaryCommand.Data.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("ManagersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("CulinaryCommand.Data.Entities.Company", b =>
@@ -537,7 +543,11 @@ namespace CulinaryCommand.Migrations
 
             modelBuilder.Entity("CulinaryCommand.Data.Entities.Location", b =>
                 {
+                    b.Navigation("ManagerLocations");
+
                     b.Navigation("Recipes");
+
+                    b.Navigation("UserLocations");
                 });
 
             modelBuilder.Entity("CulinaryCommand.Data.Entities.MeasurementUnit", b =>
@@ -550,6 +560,13 @@ namespace CulinaryCommand.Migrations
                     b.Navigation("RecipeIngredients");
 
                     b.Navigation("Steps");
+                });
+
+            modelBuilder.Entity("CulinaryCommand.Data.Entities.User", b =>
+                {
+                    b.Navigation("ManagerLocations");
+
+                    b.Navigation("UserLocations");
                 });
 #pragma warning restore 612, 618
         }
