@@ -28,8 +28,8 @@ namespace CulinaryCommand.Data.Entities
                 public string? MarginEdgeKey { get; set; }
 
                 // keep company nullable until we add a way to create companies
-                public int? CompanyId { get; set; }
-                public Company? Company { get; set; }
+                public int CompanyId { get; set; }
+                public Company Company { get; set; }
 
                 public ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
 
