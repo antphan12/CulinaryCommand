@@ -1,5 +1,6 @@
 @page "/signup"
 @using System.ComponentModel.DataAnnotations
+@using CulinaryCommand.Models
 @using Microsoft.AspNetCore.Components
 @using CulinaryCommand.Services
 @using CulinaryCommand.Data.Entities
@@ -31,85 +32,101 @@
             </div>
         }
 
-        <EditForm Model="@signUpModel" OnValidSubmit="@HandleSubmit" FormName="SignUpForm">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+        <EditForm Model="@Signup" OnValidSubmit="@HandleSubmit" FormName="SignUpForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <!-- COMPANY -->
+    <h4 class="mb-3">Company Information</h4>
+
+    <div class="mb-3">
+        <label class="form-label">Company Name</label>
+        <InputText class="form-control" @bind-Value="Signup.Company.Name" />
+        <ValidationMessage For="@(() => Signup.Company.Name)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Company Code</label>
+        <InputText class="form-control" @bind-Value="Signup.Company.CompanyCode" />
+        <ValidationMessage For="@(() => Signup.Company.CompanyCode)" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Address</label>
+        <InputText class="form-control" @bind-Value="Signup.Company.Address" />
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <label class="form-label">City</label>
+            <InputText class="form-control" @bind-Value="Signup.Company.City" />
+        </div>
+        <div class="col">
+            <label class="form-label">State</label>
+            <InputText class="form-control" @bind-Value="Signup.Company.State" />
+        </div>
+        <div class="col">
+            <label class="form-label">Zip</label>
+            <InputText class="form-control" @bind-Value="Signup.Company.ZipCode" />
+        </div>
+    </div>
 
 
-            <!-- Role Selection -->
-            <div class="role-selection mb-4">
-                <div class="btn-group w-100" role="group">
-                    <input type="radio" class="btn-check" name="role" id="manager" value="Manager" @onchange="@((e) => signUpModel.Role = e.Value?.ToString())" checked="@(signUpModel.Role == "Manager")">
-                    <label class="btn btn-outline-success role-btn" for="manager">
-                    <i class="fas fa-building me-2"></i>Manager
-                    </label>
+    <!-- LOCATION -->
+    <h4 class="mt-4 mb-3">Location Information</h4>
 
-                    <input type="radio" class="btn-check" name="role" id="cook" value="Cook" @onchange="@((e) => signUpModel.Role = e.Value?.ToString())" checked="@(signUpModel.Role == "Cook")">
-                    <label class="btn btn-outline-success role-btn" for="cook">
-                    <i class="fas fa-building me-2"></i>Cook
-                    </label>
-                </div>
-            </div>
+    <div class="mb-3">
+        <label class="form-label">Location Name</label>
+        <InputText class="form-control" @bind-Value="Signup.Location.Name" />
+        <ValidationMessage For="@(() => Signup.Location.Name)" />
+    </div>
 
-            <!-- Full Name -->
-            <div class="mb-3">
-                <label for="fullname" class="form-label">Full name</label>
-                <InputText id="fullname" type="text" class="form-control" @bind-Value="signUpModel.FullName" placeholder="Enter your full name" />
+    <div class="mb-3">
+        <label class="form-label">Location Address</label>
+        <InputText class="form-control" @bind-Value="Signup.Location.Address" />
+    </div>
 
-                @* Display validation errors for fullname field *@
-                <ValidationMessage For="@(() => signUpModel.FullName)"/>
-            </div>
+    <div class="row">
+        <div class="col">
+            <label class="form-label">City</label>
+            <InputText class="form-control" @bind-Value="Signup.Location.City" />
+        </div>
+        <div class="col">
+            <label class="form-label">State</label>
+            <InputText class="form-control" @bind-Value="Signup.Location.State" />
+        </div>
+        <div class="col">
+            <label class="form-label">Zip</label>
+            <InputText class="form-control" @bind-Value="Signup.Location.ZipCode" />
+        </div>
+    </div>
 
-            <!-- Email Address -->
-            <div class="mb-3">
-                <label for="email" class="form-label">Email address</label>
-                <InputText id="email" type="email" class="form-control" @bind-Value="signUpModel.Email" placeholder="Enter your email" />
-                
-                @* Display validation errors for email field *@
-                <ValidationMessage For="@(() => signUpModel.Email)" />
-            </div>
 
-            <!-- Password -->
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <div class="password-input-container">
-                    <InputText id="password" type="@(showPassword ? "text" : "password")" class="form-control" @bind-Value="signUpModel.Password" placeholder="Enter your password" />
-                    <button type="button" class="password-toggle-btn" @onclick="TogglePasswordVisibility">
-                        <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
-                    </button>
-                </div>
-                @* Display validation errors for password field *@
-                <ValidationMessage For="@(() => signUpModel.Password)" />
-            </div>
+    <!-- ADMIN -->
+    <h4 class="mt-4 mb-3">Admin Account</h4>
 
-            <!-- Confirm Password -->
-            <div class="mb-4">
-                <label for="confirmpassword" class="form-label">Confirm password</label>
-                <div class="password-input-container">
-                    <InputText id="confirmpassword" type="@(showConfirmPassword ? "text" : "password")" class="form-control" @bind-Value="signUpModel.ConfirmPassword" placeholder="Confirm your password" />
-                    <button type="button" class="password-toggle-btn" @onclick="ToggleConfirmPasswordVisibility">
-                        <i class="fas @(showConfirmPassword ? "fa-eye-slash" : "fa-eye")"></i>
-                    </button>
-                </div>
+    <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <InputText class="form-control" @bind-Value="Signup.Admin.Name" />
+        <ValidationMessage For="@(() => Signup.Admin.Name)" />
+    </div>
 
-                @* Display validation errors for confirm password field *@
-                <ValidationMessage For="@(() => signUpModel.ConfirmPassword)" />
-            </div>
+    <div class="mb-3">
+        <label class="form-label">Email</label>
+        <InputText type="email" class="form-control" @bind-Value="Signup.Admin.Email" />
+        <ValidationMessage For="@(() => Signup.Admin.Email)" />
+    </div>
 
-            <!-- Create Account Button -->
-            @* Disable create button while submitting to prevent double submissions*@
-            <button type="submit" class="btn btn-success w-100 signup-btn" disabled="@isSubmitting">
-            @if (isSubmitting)
-            {
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                <span>Creating account...</span>
-            }
-            else
-            {
-                <span>Create account</span>
-            }
-            </button>
-        </EditForm>
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <InputText type="password" class="form-control" @bind-Value="Signup.Admin.Password" />
+        <ValidationMessage For="@(() => Signup.Admin.Password)" />
+    </div>
+
+    <button type="submit" class="btn btn-success w-100 mt-3">
+        Create Account
+    </button>
+</EditForm>
 
         <!-- Sign In Link -->
         <div class="text-center mt-4">
@@ -120,9 +137,6 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm]
-    private SignUpModel signUpModel { get; set; } = new();
-    
     private bool showPassword = false;
     private bool showConfirmPassword = false;
 
@@ -133,56 +147,29 @@
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
 
-    protected override void OnInitialized()
-    {
-        signUpModel.Role = "Manager"; // Default to Manager
-    }
+    private FullSignupRequest Signup { get; set; } = new();
 
-    private async Task HandleSubmit() 
+    private async Task HandleSubmit()
     {
-        @* clear previous messages*@
-        errorMessage = string.Empty;
-        successMessage = string.Empty;
-
-        // set flag to true
+        errorMessage = "";
+        successMessage = "";
         isSubmitting = true;
-        try {
-            //validate if both passwords match
-            if (signUpModel.Password != signUpModel.ConfirmPassword) {
-                errorMessage = "Passwords do not match.";
-                isSubmitting = false;
-                return;
-            }
 
-            User userToCreate = new User();
-            userToCreate.Name = signUpModel.FullName;
-            userToCreate.Email = signUpModel.Email;
-            userToCreate.Password = signUpModel.Password;
-            userToCreate.Role = signUpModel.Role;
-
-            // continue to create user
-            User? user = await UserService.CreateUserAsync(userToCreate);
-
-            @* if (true)
-            {
-                errorMessage = "Sign up logic is different, check it. A user with this email already exists.";
-                isSubmitting = false;
-                return;
-            } *@
-
-            // User created successfully - navigate immediately
-            Navigation.NavigateTo("/signin", forceLoad: true);
-        }
-        catch (NavigationException)
+        try
         {
-            // NavigationException is expected during navigation - just ignore it
+            // You will write this service method.
+            await UserService.CreateAdminWithCompanyAndLocationAsync(Signup);
+            Navigation.NavigateTo("/signin", true);
         }
-        catch (Exception ex){
-            errorMessage = $"An error occured: {ex.Message}";
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
             isSubmitting = false;
         }
     }
-
     private void TogglePasswordVisibility()
     {
         showPassword = !showPassword;
@@ -193,29 +180,4 @@
         showConfirmPassword = !showConfirmPassword;
     }
 
-    private class SignUpModel 
-    {
-        // Role field - defaults to Manager, must be selected
-        [Required(ErrorMessage = "Role is required")]
-        public string Role { get; set; } = "Manager";
-
-        // Full name field - required, minimum 2 characters
-        [Required(ErrorMessage = "Full name is required")]
-        [MinLength(2, ErrorMessage = "Name must be at least 2 characters")]
-        public string FullName { get; set; } = string.Empty;
-
-        // Email field - required, must be valid email format
-        [Required(ErrorMessage = "Email is required")]
-        [EmailAddress(ErrorMessage = "Invalid email address")]
-        public string Email { get; set; } = string.Empty;
-
-        // Password field - required, minimum 6 characters
-        [Required(ErrorMessage = "Password is required")]
-        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
-        public string Password { get; set; } = string.Empty;
-
-        // Confirm password field - required (matching is validated in HandleSubmit)
-        [Required(ErrorMessage = "Please confirm your password")]
-        public string ConfirmPassword { get; set; } = string.Empty;
-    }
 }

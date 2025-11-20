@@ -3,6 +3,7 @@ using CulinaryCommand.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
+using CulinaryCommand.Models;
 
 namespace CulinaryCommand.Services
 {
@@ -19,6 +20,7 @@ namespace CulinaryCommand.Services
         Task<List<User>> GetUsersForLocationAsync(int locationId, int? companyId = null);
         Task<User?> GetUserByEmailAsync(string email);
         Task<User?> ValidateCredentialsAsync(string email, string password);
+        Task<User> CreateAdminWithCompanyAndLocationAsync(FullSignupRequest req);
     }
 
     public class UserService : IUserService
@@ -226,6 +228,82 @@ namespace CulinaryCommand.Services
             using var sha = SHA256.Create();
             var bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(input));
             return Convert.ToHexString(bytes);
+        }
+
+        public async Task<User> CreateAdminWithCompanyAndLocationAsync(FullSignupRequest req)
+        {
+            if (req == null) throw new ArgumentNullException(nameof(req));
+            if (req.Admin == null) throw new Exception("Admin information is required.");
+            if (req.Company == null) throw new Exception("Company information is required.");
+            if (req.Location == null) throw new Exception("Location information is required.");
+
+            // Check if email already exists
+            if (await _context.Users.AnyAsync(u => u.Email == req.Admin.Email))
+                throw new Exception("A user with this email already exists.");
+
+            // 1) Create Company
+            var company = new Company
+            {
+                Name = req.Company.Name,
+                CompanyCode = req.Company.CompanyCode,
+                Address = req.Company.Address,
+                City = req.Company.City,
+                State = req.Company.State,
+                ZipCode = req.Company.ZipCode,
+                Phone = req.Company.Phone,
+                Email = req.Company.Email,
+                Description = req.Company.Description,
+                LLCName = req.Company.LLCName,
+                TaxId = req.Company.TaxId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
+
+            // 2) Create Location
+            var location = new Location
+            {
+                Name = req.Location.Name,
+                Address = req.Location.Address,
+                City = req.Location.City,
+                State = req.Location.State,
+                ZipCode = req.Location.ZipCode,
+                MarginEdgeKey = req.Location.MarginEdgeKey,
+                CompanyId = company.Id
+            };
+
+            _context.Locations.Add(location);
+            await _context.SaveChangesAsync();
+
+            // 3) Create Admin User
+            var admin = new User
+            {
+                Name = req.Admin.Name,
+                Email = req.Admin.Email,
+                Password = HashPassword(req.Admin.Password),
+                Phone = req.Admin.Phone,
+                Role = "Admin",
+                CompanyId = company.Id,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.Users.Add(admin);
+            await _context.SaveChangesAsync();
+
+            // 4) Link Admin to Location (UserLocation table)
+            var link = new UserLocation
+            {
+                UserId = admin.Id,
+                LocationId = location.Id
+            };
+
+            _context.UserLocations.Add(link);
+            await _context.SaveChangesAsync();
+
+            return admin;
         }
     }
 }
