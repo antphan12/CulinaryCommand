@@ -38,7 +38,7 @@ if (string.IsNullOrWhiteSpace(conn))
     throw new InvalidOperationException("Missing connection string 'DefaultConnection'. Set ConnectionStrings__DefaultConnection via environment or config.");
 }
 
-// Mask password for log (do not leak secrets)
+// Mask password for logs (primarily for debugging in the Lightsail instance)
 string MaskPwd(string s)
 {
     if (string.IsNullOrEmpty(s)) return s;
