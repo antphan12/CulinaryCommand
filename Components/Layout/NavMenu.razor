@@ -73,3 +73,15 @@
         }
     </nav>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Auth.OnAuthStateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        Auth.OnAuthStateChanged -= StateHasChanged;
+    }
+}
