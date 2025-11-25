@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -52,7 +53,9 @@ namespace CulinaryCommand.Data.Entities
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
+        [JsonIgnore]
         public ICollection<Location>? Locations { get; set; }
+        [JsonIgnore]
         public ICollection<User>? Employees { get; set; }
     }
 }

@@ -669,6 +669,9 @@
             await LocationService.LoadAndPersistLocationsAsync(Auth.UserId.Value);
         }
 
+        // listen for AuthService
+        Auth.OnAuthStateChanged += StateHasChanged;
+
         // Initialize with default/current user data
         profileModel = new ProfileModel
         {
@@ -733,7 +736,7 @@
 
     private async Task PopulateLocations()
     {
-        var userIdString = await Auth.GetUser();
+        @* var userIdString = await Auth.GetUser();
         if (int.TryParse(userIdString, out int signedInUserId))
         {
             managedLocations = await LocationService.GetLocationsByManagerAsync(signedInUserId);
@@ -742,6 +745,16 @@
         {
             managedLocations = new List<Location>();
             Console.WriteLine($"Failed to parse signed-in user id: '{userIdString}'");
+        } *@
+
+        if (Auth.IsSignedIn) {
+
+            if (Auth.UserRole == "Manager") {
+                managedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId);
+            }
+            else { // if admin, use companyId
+                managedLocations = await LocationService.GetLocationsByCompanyAsync(Auth.CompanyId);
+            }
         }
         StateHasChanged();
     }
@@ -805,6 +818,7 @@
                 City = locationModel.City,
                 State = locationModel.State,
                 ZipCode = locationModel.ZipCode,
+                CompanyId = Auth.CompanyId!.Value
             };
             await LocationService.CreateLocationAsync(newLocation, Auth.UserId.Value);
             NavigationManager.NavigateTo("/settings/locations");
