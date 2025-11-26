@@ -565,7 +565,7 @@
                         </h4>
 
                         @* LOCAITON EDIT FORM *@
-                        <EditForm Model="@locationModel" OnValidSubmit="@HandleLocationSubmit">
+                        <EditForm Model="@currentLocation" OnValidSubmit="@HandleLocationSubmit">
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="locationName" class="form-label">Location Name</label>
@@ -641,7 +641,7 @@
     {
         if (firstRender)
         {
-            
+
 
             if (Specifier != null && ActiveTab == "locations")
             {
@@ -668,7 +668,8 @@
         }
 
         // put locations into localStorage
-        if (Auth.UserId != null){
+        if (Auth.UserId != null)
+        {
             await LocationService.LoadAndPersistLocationsAsync(Auth.UserId.Value);
         }
 
@@ -750,12 +751,15 @@
             Console.WriteLine($"Failed to parse signed-in user id: '{userIdString}'");
         } *@
 
-        if (Auth.IsSignedIn) {
+        if (Auth.IsSignedIn)
+        {
 
-            if (Auth.UserRole == "Manager") {
+            if (Auth.UserRole == "Manager")
+            {
                 managedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId);
             }
-            else { // if admin, use companyId
+            else
+            { // if admin, use companyId
                 managedLocations = await LocationService.GetLocationsByCompanyAsync(Auth.CompanyId);
             }
         }
@@ -804,9 +808,24 @@
     private async Task HandleLocationSubmit()
     {
         Console.WriteLine($"Location updated: {locationModel.Name}");
-        NavigationManager.NavigateTo("/settings/locations");
+        Console.WriteLine($"Updating Location Id = {locationModel.Id}");
+
         // TODO: Add actual database update logic or API call
-        @* LocationService. *@
+        Location updatedLocation = new Location
+        {
+            Id = currentLocation.Id,
+            Name = currentLocation.Name,
+            Address = currentLocation.Address,
+            City = currentLocation.City,
+            State = currentLocation.State,
+            ZipCode = currentLocation.ZipCode,
+            CompanyId = Auth.CompanyId!.Value
+        };
+        Console.WriteLine("Location comp: " + updatedLocation.CompanyId);
+        await LocationService.UpdateLocationAsync(updatedLocation);
+
+        // navigate after success
+        NavigationManager.NavigateTo("/settings/locations");
     }
 
     private async Task HandleLocationCreate()
