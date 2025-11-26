@@ -1,0 +1,196 @@
+@page "/signup"
+@namespace CulinaryCommand.Components.Pages
+@inject IUserService UserService
+@inject NavigationManager Nav
+@using CulinaryCommand.Data.Enums
+@using CulinaryCommand.Data.Entities
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+
+<PageTitle>Sign Up - Culinary Command</PageTitle>
+
+<div class="signup-container">
+    <div class="signup-card">
+        <div class="text-center mb-4">
+            <h1 class="app-title">Culinary Command</h1>
+            <p class="subtitle">Create Your Account</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                @successMessage
+            </div>
+        }
+
+        <EditForm Model="@signUpModel" OnValidSubmit="@HandleSubmit" FormName="SignUpForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Role Selection -->
+            <div class="role-selection mb-4">
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="role" id="manager" value="@Roles.Manager" 
+                           @onchange="@((e) => signUpModel.Role = e.Value?.ToString() ?? Roles.Employee)" 
+                           checked="@(signUpModel.Role == Roles.Manager)">
+                    <label class="btn btn-outline-success role-btn" for="manager">
+                        <i class="fas fa-building me-2"></i>Manager
+                    </label>
+
+                    <input type="radio" class="btn-check" name="role" id="employee" value="@Roles.Employee" 
+                           @onchange="@((e) => signUpModel.Role = e.Value?.ToString() ?? Roles.Employee)" 
+                           checked="@(signUpModel.Role == Roles.Employee)">
+                    <label class="btn btn-outline-success role-btn" for="employee">
+                        <i class="fas fa-utensils me-2"></i>Employee
+                    </label>
+                </div>
+            </div>
+
+            <!-- Name Fields -->
+            <div class="row mb-3">
+                <div class="col">
+                    <label class="form-label">First Name</label>
+                    <InputText class="form-control" @bind-Value="signUpModel.FirstName" placeholder="First name" />
+                </div>
+                <div class="col">
+                    <label class="form-label">Last Name</label>
+                    <InputText class="form-control" @bind-Value="signUpModel.LastName" placeholder="Last name" />
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <InputText type="email" class="form-control" @bind-Value="signUpModel.Email" placeholder="Enter your email" />
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <div class="password-input-container">
+                    <InputText type="@(showPassword ? "text" : "password")" class="form-control" 
+                               @bind-Value="signUpModel.Password" placeholder="Create a password" />
+                    <button type="button" class="password-toggle-btn" @onclick="TogglePasswordVisibility">
+                        <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-3">
+                <label class="form-label">Confirm Password</label>
+                <div class="password-input-container">
+                    <InputText type="@(showConfirmPassword ? "text" : "password")" class="form-control" 
+                               @bind-Value="signUpModel.ConfirmPassword" placeholder="Confirm your password" />
+                    <button type="button" class="password-toggle-btn" @onclick="ToggleConfirmPasswordVisibility">
+                        <i class="fas @(showConfirmPassword ? "fa-eye-slash" : "fa-eye")"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sign Up Button -->
+            <button type="submit" class="btn btn-success w-100 signup-btn" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Creating Account...</span>
+                }
+                else
+                {
+                    <span>Sign Up</span>
+                }
+            </button>
+        </EditForm>
+
+        <!-- Sign In Link -->
+        <div class="text-center mt-4">
+            <span class="text-muted">Already have an account? </span>
+            <a href="/signin" class="signin-link">Sign in</a>
+        </div>
+
+        <!-- Admin Sign Up Link -->
+        <div class="text-center mt-3">
+            <span class="text-muted">Adding a new resturant? </span>
+            <a href="/adminsignup" class="signup-link">Create Resturant</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private SignUpModel signUpModel = new() { Role = Roles.Employee };
+    private bool showPassword = false;
+    private bool showConfirmPassword = false;
+    private bool isSubmitting = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+
+    private async Task HandleSubmit()
+    {
+        errorMessage = "";
+        successMessage = "";
+
+        // Validate passwords match
+        if (signUpModel.Password != signUpModel.ConfirmPassword)
+        {
+            errorMessage = "Passwords do not match.";
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            // Create the user
+            var user = new User
+            {
+                Name = $"{signUpModel.FirstName} {signUpModel.LastName}".Trim(),
+                Email = signUpModel.Email,
+                Password = signUpModel.Password,
+                Role = signUpModel.Role,
+                Phone = ""
+            };
+
+            await UserService.CreateUserAsync(user);
+            successMessage = "Account created successfully! Redirecting to sign in...";
+            
+            // Redirect after a brief delay
+            await Task.Delay(2000);
+            Nav.NavigateTo("/signin", true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+
+    private void ToggleConfirmPasswordVisibility()
+    {
+        showConfirmPassword = !showConfirmPassword;
+    }
+
+    private class SignUpModel
+    {
+        public string Role { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}
