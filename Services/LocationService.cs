@@ -29,6 +29,9 @@ namespace CulinaryCommand.Services
 
         Task<List<Location>> GetLocationsByManagerAsync(int? managerId);
 
+        Task<List<Location>> GetLocationsByCompanyAsync(int? companyId);
+
+
         Task LoadAndPersistLocationsAsync(int userId);
 
     }
@@ -170,6 +173,13 @@ namespace CulinaryCommand.Services
             .Where(l => l.ManagerLocations.Any(ml => ml.UserId == managerId))
             .Include(l => l.ManagerLocations)
                 .ThenInclude(ml => ml.User)
+            .ToListAsync();
+        }
+
+        public async Task<List<Location>> GetLocationsByCompanyAsync(int? companyId)
+        {
+            return await _context.Locations
+            .Where(l => l.CompanyId == companyId)
             .ToListAsync();
         }
 
