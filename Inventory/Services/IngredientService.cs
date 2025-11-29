@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CulinaryCommand.Inventory.Services
 {
-    public class IngredientService
+    public class IngredientService : IIngredientService
     {
         private readonly AppDbContext _db;
 
