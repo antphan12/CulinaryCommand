@@ -71,6 +71,7 @@ builder.Services.AddScoped<IngredientService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<LocationState>();
 builder.Services.AddScoped<IIngredientService, IngredientService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 var app = builder.Build();
 
