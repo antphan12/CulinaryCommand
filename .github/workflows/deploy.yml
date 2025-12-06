@@ -117,7 +117,7 @@ jobs:
                 ssh ${{ secrets.LIGHTSAIL_USER }}@${{ secrets.LIGHTSAIL_HOST }} << 'REMOTE_EOF'
                   sudo mkdir -p /var/www/culinarycommand
 
-                  cat >/var/www/culinarycommand/.env << 'EOF'
+                  sudo tee /var/www/culinarycommand/.env > /dev/null << 'EOF'
                   ASPNETCORE_ENVIRONMENT=Production
                   ASPNETCORE_URLS=http://0.0.0.0:5000
                   ConnectionStrings__DefaultConnection=Server=${{ secrets.RDS_HOST }};Port=3306;Database=${{ secrets.RDS_DB_NAME }};Uid=${{ secrets.RDS_DB_USER }};Pwd=${{ secrets.RDS_DB_PASSWORD }};SslMode=Required;
