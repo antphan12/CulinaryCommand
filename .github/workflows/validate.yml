@@ -20,4 +20,5 @@ jobs:
 
         - name: Run Culinary Command xUnit tests
           run: |
+            pwd
             dotnet test CulinaryCommandApp/CulinaryCommand.sln
