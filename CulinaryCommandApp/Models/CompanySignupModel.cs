@@ -11,16 +11,16 @@ namespace CulinaryCommand.Models
         public string CompanyCode { get; set; } = string.Empty;
 
         [MaxLength(256)]
-        public string? Address { get; set; }
+        public string? Address { get; set; } = string.Empty;
 
         [MaxLength(128)]
-        public string? City { get; set; }
+        public string? City { get; set; } = string.Empty;
 
         [MaxLength(64)]
-        public string? State { get; set; }
+        public string? State { get; set; } = string.Empty;
 
         [MaxLength(32)]
-        public string? ZipCode { get; set; }
+        public string? ZipCode { get; set; } = string.Empty;
 
         [MaxLength(128)]
         public string? Phone { get; set; }

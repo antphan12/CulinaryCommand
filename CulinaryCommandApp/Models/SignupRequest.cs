@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CulinaryCommand.Models
 {
-    public class FullSignupRequest
+    public class SignupRequest
     {
         public CompanySignupModel Company { get; set; } = new();
         public LocationSignupModel Location { get; set; } = new();

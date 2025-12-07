@@ -114,8 +114,11 @@
         {
             ManagedLocations = await LocationService.GetLocationsByCompanyAsync(Auth.CompanyId!.Value);
         }
-        else
+        else if (Auth.UserRole == "Manager") 
         {
+            ManagedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId!.Value);
+        }
+        else {
             ManagedLocations = await LocationService.GetLocationsByManagerAsync(Auth.UserId!.Value);
         }
 

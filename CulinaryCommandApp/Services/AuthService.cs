@@ -143,9 +143,19 @@ namespace CulinaryCommand.Services
                 .Distinct()
                 .ToList() ?? new List<int>();
 
-            ManagedLocations = user.ManagerLocations
-                .Select(ml => ml.Location)
-                .ToList();
+            // Admin: can see all locations in their company
+            if (user.Role == "Admin")
+            {
+                ManagedLocations = user.Company?.Locations?.ToList() ?? new List<Location>();
+            }
+            else
+            {
+                // Manager/Employee: locations assigned through UserLocations
+                ManagedLocations = user.UserLocations?
+                    .Select(ul => ul.Location)
+                    .Distinct()
+                    .ToList() ?? new List<Location>();
+            }
 
             // Get active location from localStorage if present
             var activeLocationIdStr = await _js.InvokeAsync<string?>("localStorage.getItem", "cc_activeLocationId");

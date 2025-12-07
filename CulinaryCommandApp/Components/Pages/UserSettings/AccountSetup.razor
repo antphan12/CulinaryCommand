@@ -4,6 +4,7 @@
 @inject NavigationManager Nav
 @inject IUserService UserService
 @inject AuthService Auth
+@inject ILocationService locationService
 
 <h3>Set Your Password</h3>
 
@@ -79,9 +80,12 @@ else
 
         if (invitedUser != null){
             // Auto-login after activation
-            await Auth.SignInAsync(invitedUser);
+            User freshUser = await UserService.GetUserByEmailAsync(invitedUser.Email!);
+            await Auth.SignInAsync(freshUser);
 
-            Nav.NavigateTo("/dashboard");
+            await locationService.LoadAndPersistLocationsAsync(invitedUser.Id);
+
+            Nav.NavigateTo("/");
         }
         else {
             Nav.NavigateTo("/signIn", forceLoad: true);
