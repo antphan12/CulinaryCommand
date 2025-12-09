@@ -34,7 +34,7 @@ else
                     <td>@r.Title</td>
                     <td>@r.Category</td>
                     <td>@r.RecipeType</td>
-                    <td>@(r.YieldAmount) @r.YieldUnit</td>
+                    <td>@FormatYield(r)</td>
                     <td>
                     @if (priv){
                         <button class="btn btn-primary me-2" @onclick="() => Edit(r.RecipeId)">
@@ -74,5 +74,26 @@ else
            await Recipes.DeleteAsync(id);
            recipes = await Recipes.GetAllAsync();
         }
+    }
+
+    private string FormatYield(Recipe r)
+    {
+        if (!r.YieldAmount.HasValue)
+        {
+            // If you ever want to show "—" when no yield, do it here
+            return string.IsNullOrWhiteSpace(r.YieldUnit) ? string.Empty : r.YieldUnit!;
+        }
+
+        var amount = r.YieldAmount.Value;
+
+        // Strip pointless trailing zeros: 20.0000 -> "20", 20.5 -> "20.5"
+        var amountText = decimal.Truncate(amount) == amount
+            ? amount.ToString("0")      // integer
+            : amount.ToString("0.##");  // up to 2 decimal places
+
+        if (string.IsNullOrWhiteSpace(r.YieldUnit))
+            return amountText;
+
+        return $"{amountText} {r.YieldUnit}";
     }
 }
