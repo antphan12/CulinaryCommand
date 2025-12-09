@@ -16,12 +16,46 @@ jobs:
         - name: Checkout
           uses: actions/checkout@v4
 
+        - name: Cache .NET packages
+          uses: actions/cache@v4
+          with:
+            path: |
+              ~/.nuget/packages
+            key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+            restore-keys: |
+              ${{ runner.os }}-nuget-
+
         - name: Setup .NET
           uses: actions/setup-dotnet@v4
           with:
             dotnet-version: 9.0.x
 
+        - name: Setup Node.js for Playwright CLI
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+
+        - name: Install Playwright Dependencies
+          working-directory: CulinaryCommandApp
+          run: |
+            npx playwright install --with-deps
+
+        - name: Start app
+          working-directory: CulinaryCommandApp
+          run: |
+            dotnet run --project CulinaryCommand.csproj --urls "http://0.0.0.0:5000" &
+            sleep 10 # wait for app to start
+
         - name: Run Culinary Command xUnit tests
           run: |
-            pwd
             dotnet test CulinaryCommandApp/CulinaryCommand.sln
+
+        - name: Upload Playwright screenshots
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: playwright-screenshots
+            path: |
+              CulinaryCommandApp/playwright-artifacts/screenshots
+            if-no-files-found: ignore
+
