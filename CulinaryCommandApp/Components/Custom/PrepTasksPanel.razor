@@ -1,6 +1,6 @@
 @namespace CulinaryCommand.Components.Custom
 @using CulinaryCommand.Data.Entities
-@using CulinaryCommand.Data.Models
+@using Microsoft.AspNetCore.Components
 
 <div class="cc-card">
     <div class="cc-card-header">
@@ -35,6 +35,15 @@
                             <span>Count: <strong>@(t.Count?.ToString() ?? "-")</strong></span>
                             <span>Prep: <strong>@t.Prep</strong></span>
                         </div>
+
+                        @if (t.Recipe is not null)
+                        {
+                            <button class="btn btn-light border btn-sm"
+                                    type="button"
+                                    @onclick="() => OpenRecipe(t)">
+                                Recipe Details
+                            </button>
+                        }
                     </div>
 
                     <div class="cc-task-meta">
@@ -53,14 +62,101 @@
     }
 </div>
 
+@* ==== BOOTSTRAP MODAL FOR RECIPE CARD ==== *@
+@if (showRecipe && selectedTask?.Recipe is not null)
+{
+    var r = selectedTask.Recipe;
+
+    <div class="modal fade show d-block"
+         tabindex="-1"
+         style="background-color: rgba(0,0,0,0.5);"
+         role="dialog"
+         aria-modal="true"
+         @onclick="CloseRecipe">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg" @onclick:stopPropagation>
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title mb-0">@r.Title</h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            aria-label="Close"
+                            @onclick="CloseRecipe">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    @if (r.YieldAmount.HasValue || !string.IsNullOrWhiteSpace(r.YieldUnit))
+                    {
+                        <div class="text-muted mb-2">
+                            <strong>Yield:</strong>
+                            @FormatQuantity(r.YieldAmount) @r.YieldUnit
+                        </div>
+                    }
+
+                    @* Ingredients *@
+                    @if (r.RecipeIngredients is not null && r.RecipeIngredients.Any())
+                    {
+                        <h6 class="mt-2">Ingredients</h6>
+                        <ul class="mb-3">
+                            @foreach (var ri in r.RecipeIngredients.OrderBy(x => x.SortOrder))
+                            {
+                                <li>
+                                    @FormatQuantity(ri.Quantity)
+                                    @if (ri.Unit is not null && !string.IsNullOrWhiteSpace(ri.Unit.Name))
+                                    {
+                                        @($" {ri.Unit.Name}")
+                                    }
+
+                                    @(" – ")
+                                    @(ri.Ingredient?.Name ?? "Ingredient")
+
+                                    @if (!string.IsNullOrWhiteSpace(ri.PrepNote))
+                                    {
+                                        <span class="text-muted"> (@ri.PrepNote)</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    @* Steps *@
+                    @if (r.Steps is not null && r.Steps.Any())
+                    {
+                        <h6>Steps</h6>
+                        <ol class="mb-0">
+                            @foreach (var step in r.Steps.OrderBy(s => s.StepNumber))
+                            {
+                                <li>@step.Instructions</li>
+                            }
+                        </ol>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            @onclick="CloseRecipe">
+                        Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    // Now we work with WorkTask instead of PrepTask
     [Parameter] public List<Tasks> Tasks { get; set; } = new();
     [Parameter] public EventCallback<Tasks> OnMarkDone { get; set; }
 
+    private bool showRecipe;
+    private Tasks? selectedTask;
+
     private string DisplayTitle(Tasks t)
     {
-        // Prefer recipe title if provided, otherwise fall back to task name
         if (t.Recipe is not null && !string.IsNullOrWhiteSpace(t.Recipe.Title))
             return t.Recipe.Title;
 
@@ -73,5 +169,32 @@
         {
             await OnMarkDone.InvokeAsync(t);
         }
+    }
+
+    private void OpenRecipe(Tasks t)
+    {
+        selectedTask = t;
+        showRecipe = true;
+    }
+
+    private void CloseRecipe()
+    {
+        showRecipe = false;
+        selectedTask = null;
+    }
+
+    private static string FormatQuantity(decimal? quantity)
+    {
+        if (!quantity.HasValue)
+            return "-";
+
+        var q = quantity.Value;
+
+        if (decimal.Truncate(q) == q)
+        {
+            return ((int)q).ToString();
+        }
+
+        return q.ToString("0.##");
     }
 }

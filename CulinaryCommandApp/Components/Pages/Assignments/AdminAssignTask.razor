@@ -2,8 +2,7 @@
 @using System.ComponentModel.DataAnnotations
 @using CulinaryCommand.Data.Entities
 @using CulinaryCommand.Services
-@using CulinaryCommand.Models;
-@using CulinaryCommand.Data.Enums;   <!-- add this -->
+@using CulinaryCommand.Data.Enums;
 
 @inject AuthService Auth
 @inject NavigationManager Nav
@@ -11,6 +10,7 @@
 @inject IUserService UserService
 @inject LocationState LocationState
 @inject ITaskAssignmentService TaskService
+@inject RecipeService RecipeService      
 
 @implements IDisposable
 @rendermode InteractiveServer
@@ -39,15 +39,8 @@ else
                 <div class="text-muted small text-end">
                     <div class="fw-semibold">Location</div>
                     <div>@SelectedLocationName</div>
+                    <div class="small text-muted">Change in header</div>
                 </div>
-                <select class="form-select form-select-sm"
-                        @bind-Value="selectedLocationId"
-                        @bind-Value:event="onchange">
-                    @foreach (var loc in locations)
-                    {
-                        <option value="@loc.Id">@loc.Name</option>
-                    }
-                </select>
             </div>
         </div>
 
@@ -67,7 +60,7 @@ else
                             <DataAnnotationsValidator />
                             <ValidationSummary />
 
-                            <!-- Task type --> 
+                            <!-- Task type -->
                             <div class="mb-3">
                                 <label class="form-label">Task type</label>
                                 <InputSelect class="form-select" @bind-Value="newTask.TaskType">
@@ -108,6 +101,20 @@ else
                             @* Prep-only fields *@
                             @if (newTask.TaskType == WorkTaskKind.PrepFromRecipe)
                             {
+                                <div class="mb-3 mt-2">
+                                    <label class="form-label">Recipe</label>
+                                    <InputSelect class="form-select" @bind-Value="newTask.RecipeId">
+                                        <option value="">Select a recipe</option>
+                                        @foreach (var r in recipes)
+                                        {
+                                            <option value="@r.RecipeId">@r.Title</option>
+                                        }
+                                    </InputSelect>
+                                    <div class="form-text">
+                                        Choose the recipe this prep task is for.
+                                    </div>
+                                </div>
+
                                 <div class="row g-3 mt-1">
                                     <div class="col-6">
                                         <label class="form-label">Par</label>
@@ -251,6 +258,8 @@ else
     private int? selectedLocationId;
     private string searchTerm = string.Empty;
 
+    private List<Recipe> recipes = new();
+
     private readonly List<string> stationOptions = new() { "Prep", "Grill", "Saute", "Expo", "Pastry", "Dish" };
     private readonly List<string> priorityOptions = new() { "Low", "Normal", "High", "Critical" };
     private readonly List<string> statusBuckets = new() { "Pending", "In Progress", "Completed" };
@@ -276,10 +285,14 @@ else
             return;
         }
 
+        // use header-selected location as source of truth
+        selectedLocationId = LocationState.CurrentLocation?.Id;
+
         LocationState.OnChange += HandleLocationStateChanged;
 
         await LoadLocationsAsync();
         await LoadTeamAsync();
+        await LoadRecipesAsync();
         await LoadAssignmentsAsync();
 
         ready = true;
@@ -313,6 +326,7 @@ else
             locations.Add(new Location { Id = 1, Name = "Main Kitchen" });
         }
 
+        // fallback only if header has no location
         selectedLocationId ??= LocationState.CurrentLocation?.Id ?? locations.FirstOrDefault()?.Id;
     }
 
@@ -344,6 +358,27 @@ else
         }
     }
 
+    private async Task LoadRecipesAsync()
+    {
+        recipes.Clear();
+
+        if (!selectedLocationId.HasValue)
+            return;
+
+        try
+        {
+            var all = await RecipeService.GetAllAsync();
+            recipes = all
+                .Where(r => r.LocationId == selectedLocationId.Value)
+                .OrderBy(r => r.Title)
+                .ToList();
+        }
+        catch
+        {
+            recipes = new();
+        }
+    }
+
     private async Task LoadAssignmentsAsync()
     {
         if (!selectedLocationId.HasValue) return;
@@ -355,9 +390,23 @@ else
         if (!selectedLocationId.HasValue)
             return;
 
+        // Decide final task name (auto-fill from recipe if prep task & name is blank)
+        var name = newTask.Name?.Trim() ?? string.Empty;
+
+        if (newTask.TaskType == WorkTaskKind.PrepFromRecipe &&
+            newTask.RecipeId.HasValue &&
+            string.IsNullOrWhiteSpace(name))
+        {
+            var recipe = recipes.FirstOrDefault(r => r.RecipeId == newTask.RecipeId.Value);
+            if (recipe != null && !string.IsNullOrWhiteSpace(recipe.Title))
+            {
+                name = recipe.Title;
+            }
+        }
+
         Tasks? task = new Tasks
         {
-            Name = newTask.Name.Trim(),
+            Name = name,
             Station = newTask.Station,
             Priority = newTask.Priority,
             Status = "Pending",
@@ -371,8 +420,10 @@ else
             Kind = newTask.TaskType,
             Par = newTask.Par,
             Count = newTask.Count,
+            RecipeId = newTask.RecipeId, 
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Date = DateTime.UtcNow             // required DB field
         };
 
         var created = await TaskService.CreateAsync(task);
@@ -385,6 +436,7 @@ else
             Priority = task.Priority,
             DueDate = task.DueDate,
             Notes = string.Empty
+            // RecipeId left null; choose fresh per task
         };
 
         await InvokeAsync(StateHasChanged);
@@ -442,30 +494,20 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task OnLocationSelectChanged(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var id))
-        {
-            selectedLocationId = id;
-            await LoadTeamAsync();
-            await LoadAssignmentsAsync();
-            await InvokeAsync(StateHasChanged);
-        }
-    }
-
     private void HandleLocationStateChanged()
     {
         _ = InvokeAsync(async () =>
         {
-            selectedLocationId = LocationState.CurrentLocation?.Id ?? selectedLocationId;
+            selectedLocationId = LocationState.CurrentLocation?.Id;
             await LoadTeamAsync();
+            await LoadRecipesAsync();
             await LoadAssignmentsAsync();
             StateHasChanged();
         });
     }
 
     private string SelectedLocationName =>
-        locations.FirstOrDefault(l => l.Id == selectedLocationId)?.Name ?? "Select a location";
+        LocationState.CurrentLocation?.Name ?? "Select a location";
 
     private IEnumerable<Tasks> TasksForCurrentLocation =>
         assignments.Where(t => !selectedLocationId.HasValue || t.LocationId == selectedLocationId.Value);
@@ -512,11 +554,11 @@ else
         [StringLength(512)]
         public string? Notes { get; set; } = string.Empty;
 
-        // NEW: differentiate generic vs prep tasks
         public WorkTaskKind TaskType { get; set; } = WorkTaskKind.Generic;
 
-        // NEW: prep fields
         public int? Par { get; set; }
         public int? Count { get; set; }
+
+        public int? RecipeId { get; set; }
     }
 }

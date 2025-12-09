@@ -1,35 +1,151 @@
 @page "/tasks"
 @namespace CulinaryCommand.Components.Pages
+
 @using CulinaryCommand.Components.Custom
 @using CulinaryCommand.Data.Entities
 @using CulinaryCommand.Data.Enums
-@using CulinaryCommand.Data.Models
+@using CulinaryCommand.Services
+
+@inject AuthService Auth
+@inject ITaskAssignmentService TaskService
+@inject LocationState LocationState
+@inject NavigationManager Nav
+
+@implements IDisposable
+@rendermode InteractiveServer
 
 <PageTitle>My Tasks</PageTitle>
 
-<div class="container mt-4">
-    <h1 class="fw-bold mb-1">Welcome, @username</h1>
-    <div class="text-muted mb-3">Here's what needs your attention today.</div>
+@if (!ready)
+{
+    <div class="container mt-4 text-center">
+        <div class="mt-5">Loading your tasks...</div>
+    </div>
+}
+else if (!Auth.IsSignedIn)
+{
+    <div class="container mt-4">
+        <div class="alert alert-warning mt-4">
+            You need to sign in to view your tasks.
+        </div>
+    </div>
+}
+else
+{
+    <div class="container mt-4">
+        <h1 class="fw-bold mb-1">Welcome, @username</h1>
+        <div class="text-muted mb-1">Location: @SelectedLocationName</div>
+        <div class="text-muted mb-3">Here's what needs your attention today.</div>
 
-    <PrepTasksPanel Tasks="@prepTasks" OnMarkDone="HandleMarkDone" />
-</div>
+        @if (prepTasks is null || prepTasks.Count == 0)
+        {
+            <div class="alert alert-info">
+                You don't have any prep tasks assigned right now.
+            </div>
+        }
+        else
+        {
+            <PrepTasksPanel Tasks="@prepTasks" OnMarkDone="HandleMarkDone" />
+        }
+    </div>
+}
 
 @code {
-    private string username = "Alex";
+    private bool ready;
+    private string username = "Cook";
 
-    // Temporary sample data (replace with API call)
-    private List<Tasks> prepTasks = new()
-    {
-        new() { Name="Chop onions", Par=5, Count=2, DueDate=DateTime.Now, Status="Pending", Kind=WorkTaskKind.PrepFromRecipe },
-        new() { Name="Prepare marinara sauce", Par=3, Count=1, DueDate=DateTime.Now, Status="Pending", Kind=WorkTaskKind.PrepFromRecipe },
-        new() { Name="Portion chicken breasts", Par=10, Count=4, DueDate=DateTime.Now, Status="Pending", Kind=WorkTaskKind.PrepFromRecipe },
-        new() { Name="Mix house dressing", Par=2, Count=0, DueDate=DateTime.Now, Status="Pending", Kind=WorkTaskKind.PrepFromRecipe },
-        new() { Name="Slice fresh bread", Par=8, Count=2, DueDate=DateTime.Now, Status="Pending", Kind=WorkTaskKind.PrepFromRecipe },
-    };
+    private List<Tasks> allTasks = new();
+    private List<Tasks> prepTasks = new();
+    private int? selectedLocationId;
 
-    Task HandleMarkDone(Tasks t)
+    private bool _isLoadingTasks = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine($"[DEBUG] Marked done: {t.Name}");
-        return Task.CompletedTask;
+        if (!firstRender) return;
+
+        await Auth.EnsureHydratedAsync();
+
+        if (!Auth.IsSignedIn)
+        {
+            ready = true;
+            StateHasChanged();
+            return;
+        }
+
+        username = Auth.CurrentUser?.Name
+            ?? Auth.UserEmail
+            ?? "Cook";
+
+        selectedLocationId = LocationState.CurrentLocation?.Id;
+
+        LocationState.OnChange += HandleLocationStateChanged;
+
+        await LoadTasksAsync();
+
+        ready = true;
+        StateHasChanged();
+    }
+
+    private async Task LoadTasksAsync()
+    {
+        if (_isLoadingTasks) return;
+
+        _isLoadingTasks = true;
+        try
+        {
+            if (!Auth.UserId.HasValue)
+            {
+                allTasks = new();
+                prepTasks = new();
+                return;
+            }
+
+            allTasks = await TaskService.GetForUserAsync(Auth.UserId.Value, selectedLocationId);
+
+            prepTasks = allTasks
+                .Where(t => t.Kind == WorkTaskKind.PrepFromRecipe)
+                .Where(t => !string.Equals(t.Status, "Completed", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(t => t.DueDate)
+                .ToList();
+        }
+        finally
+        {
+            _isLoadingTasks = false;
+        }
+    }
+
+    private async Task HandleMarkDone(Tasks t)
+    {
+        await TaskService.UpdateStatusAsync(t.Id, "Completed");
+
+        var match = allTasks.FirstOrDefault(x => x.Id == t.Id);
+        if (match is not null)
+        {
+            match.Status = "Completed";
+            match.UpdatedAt = DateTime.UtcNow;
+        }
+
+        prepTasks.RemoveAll(x => x.Id == t.Id);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void HandleLocationStateChanged()
+    {
+        await InvokeAsync(async () =>
+        {
+            selectedLocationId = LocationState.CurrentLocation?.Id ?? selectedLocationId;
+            await LoadTasksAsync();
+            StateHasChanged();
+        });
+    }
+
+    private string SelectedLocationName =>
+        LocationState.CurrentLocation?.Name ?? "No location selected";
+
+    public void Dispose()
+    {
+        LocationState.OnChange -= HandleLocationStateChanged;
     }
 }
