@@ -26,6 +26,7 @@ namespace CulinaryCommand.Services
         Task<List<Location>> GetLocationsByCompanyAsync(int? companyId);
         Task<List<Location>> GetLocationsByEmployeeAsync(int? employeeId);
 
+
         Task LoadAndPersistLocationsAsync(int userId);
     }
 

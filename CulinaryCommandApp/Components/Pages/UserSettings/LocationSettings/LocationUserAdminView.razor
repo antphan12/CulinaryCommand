@@ -13,6 +13,10 @@
         <i class="bi bi-person-plus me-2"></i>Invite User
     </button>
 
+    <button class="btn btn-outline-primary mb-3 ms-2" @onclick="ShowAddExistingForm">
+        <i class="bi bi-person-check me-2"></i>Add Existing User
+    </button>
+
     @if (showInvite)
     {
         <InviteUserForm 
@@ -21,11 +25,35 @@
             OnInvited="ReloadUsers" />
     }
 
+    @if (showAddExisting)
+    {
+        <div class="card card-body mb-3">
+            <label class="form-label fw-semibold">Select Existing User</label>
+
+            <select class="form-select" @bind="selectedUserId">
+                <option value="">-- Select User --</option>
+                @foreach (var u in AvailableUsers)
+                {
+                    <option value="@u.Id">@u.Name (@u.Email)</option>
+                }
+            </select>
+
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-success" @onclick="AddExistingUser"
+                        disabled="@(!CanAddExisting)">
+                    Add to Location
+                </button>
+
+                <button class="btn btn-outline-secondary" @onclick="HideAddExistingForm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    }
+
     @if (Users.Count == 0)
     {
-        <div class="alert alert-info">
-            No users assigned to this location yet.
-        </div>
+        <div class="alert alert-info">No users assigned to this location yet.</div>
     }
     else
     {
@@ -79,35 +107,83 @@
     [Parameter] public int LocationId { get; set; }
 
     private bool showInvite = false;
+    private bool showAddExisting = false;
+
     private bool hydrated = false;
+
     private List<User> Users = new();
+    private List<User> AvailableUsers = new();
+
+    private string? selectedUserId; // dropdown binding
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await Auth.EnsureHydratedAsync();
+
+        if (!Auth.IsSignedIn)
         {
-            if (!firstRender)
-                return;
-
-            // Must wait for hydration here
-            await Auth.EnsureHydratedAsync();
-
-            // Redirect only AFTER hydration
-            if (!Auth.IsSignedIn)
-            {
-                Nav.NavigateTo("/signin", replace: true);
-                return;
-            }
-
-            await ReloadUsers();
-
-            hydrated = true;
-            StateHasChanged();
+            Nav.NavigateTo("/signin", replace: true);
+            return;
         }
+
+        await ReloadUsers();
+        await LoadAvailableUsers();
+
+        hydrated = true;
+        StateHasChanged();
+    }
 
     private async Task ReloadUsers()
     {
         Users = await LocationService.GetUsersForLocationAsync(LocationId);
+        await LoadAvailableUsers();
         StateHasChanged();
     }
+
+    private async Task LoadAvailableUsers()
+    {
+        if (Auth.CompanyId == null) return;
+
+        var companyUsers = await UserService.GetUsersByCompanyAsync(Auth.CompanyId.Value);
+
+        var assignedIds = Users.Select(u => u.Id).ToHashSet();
+
+        AvailableUsers = companyUsers
+            .Where(u => !assignedIds.Contains(u.Id))
+            .OrderBy(u => u.Name)
+            .ToList();
+    }
+
+    // ---------------------------
+    // ADD EXISTING USER LOGIC
+    // ---------------------------
+
+    private void ShowAddExistingForm() => showAddExisting = true;
+    private void HideAddExistingForm()
+    {
+        showAddExisting = false;
+        selectedUserId = null;
+    }
+
+    private bool CanAddExisting => !string.IsNullOrWhiteSpace(selectedUserId);
+
+    private async Task AddExistingUser()
+    {
+        if (!int.TryParse(selectedUserId, out var userId))
+            return;
+
+        await LocationService.AddUserToLocationAsync(LocationId, userId);
+
+        await ReloadUsers();
+        HideAddExistingForm();
+    }
+
+    // ---------------------------
+    // Existing logic unchanged
+    // ---------------------------
 
     private void ShowInviteForm() => showInvite = true;
     private void HideInviteForm() => showInvite = false;
@@ -124,12 +200,9 @@
 
     private async Task Promote(User user)
     {
-        // change role
         user.Role = "Manager";
         await UserService.UpdateUserAsync(user);
-
         await LocationService.AddManagerToLocationAsync(LocationId, user.Id);
-
         await ReloadUsers();
     }
 
@@ -137,9 +210,7 @@
     {
         user.Role = "Employee";
         await UserService.UpdateUserAsync(user);
-
         await LocationService.RemoveManagerFromLocationAsync(LocationId, user.Id);
-
         await ReloadUsers();
     }
 }

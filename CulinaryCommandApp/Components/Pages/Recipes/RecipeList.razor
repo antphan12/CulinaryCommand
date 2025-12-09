@@ -2,6 +2,8 @@
 @inject NavigationManager Nav
 @inject IJSRuntime Js
 @inject RecipeService Recipes
+@inject AuthService auth
+@rendermode InteractiveServer
 
 <h3 class="mb-3">Recipes</h3>
 
@@ -34,12 +36,14 @@ else
                     <td>@r.RecipeType</td>
                     <td>@(r.YieldAmount) @r.YieldUnit</td>
                     <td>
+                    @if (priv){
                         <button class="btn btn-primary me-2" @onclick="() => Edit(r.RecipeId)">
                             <i class="bi bi-pencil-square"></i>
                         </button>
                         <button class="btn btn-danger" @onclick="() => Delete(r.RecipeId)">
                             <i class="bi bi-trash"></i>
                         </button>
+                    }
                     </td>
                 </tr>
             }
@@ -49,10 +53,15 @@ else
 
 @code {
     List<Recipe>? recipes;
-
+    private string role = string.Empty;
+    private bool priv = false;
+    
     protected override async Task OnInitializedAsync()
     {
         recipes = await Recipes.GetAllAsync();
+        if (auth.CurrentUser?.Role == "Manager" || auth.CurrentUser.Role == "Admin"){
+            priv = true;
+        }
     }
 
     void AddNew() => Nav.NavigateTo("/recipes/create");
