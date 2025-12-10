@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using CulinaryCommand.Data;
 using CulinaryCommand.Services;
 using CulinaryCommand.Inventory.Services;
+using CulinaryCommand.PurchaseOrder.Services;
 using CulinaryCommand.Inventory;
 using CulinaryCommand.Inventory.Services.Interfaces;
 using System; // for Version, TimeSpan
@@ -78,6 +79,7 @@ builder.Services.AddScoped<IInventoryTransactionService, InventoryTransactionSer
 builder.Services.AddScoped<IInventoryManagementService, InventoryManagementService>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
+builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddSingleton<EnumService>();
 
 var app = builder.Build();
