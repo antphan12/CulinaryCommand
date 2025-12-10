@@ -1,5 +1,11 @@
 @page "/purchase-orders/create"
+@using CulinaryCommand.PurchaseOrder.DTOs
+@using CulinaryCommand.PurchaseOrder.Services
+@using CulinaryCommand.Inventory.Entities
+@using Microsoft.EntityFrameworkCore
 @inject NavigationManager Nav
+@inject IPurchaseOrderService PurchaseOrderService
+@inject CulinaryCommand.Data.AppDbContext Db
 
 <h3 class="mb-4">Create Purchase Order</h3>
 
@@ -50,8 +56,14 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <label class="form-label">Item Name</label>
-                                <InputText class="form-control" @bind-Value="item.ItemName" placeholder="Item name" />
+                                <label class="form-label">Ingredient</label>
+                                <InputSelect class="form-select" @bind-Value="item.IngredientId">
+                                    <option value="0">-- Select Ingredient --</option>
+                                    @foreach (var ing in _ingredients)
+                                    {
+                                        <option value="@ing.Id">@ing.Name</option>
+                                    }
+                                </InputSelect>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Quantity</label>
@@ -59,7 +71,13 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Unit</label>
-                                <InputText class="form-control" @bind-Value="item.Unit" placeholder="ea, lb, kg" />
+                                <InputSelect class="form-select" @bind-Value="item.UnitId">
+                                    <option value="0">-- Select Unit --</option>
+                                    @foreach (var u in _units)
+                                    {
+                                        <option value="@u.Id">@u.Abbreviation</option>
+                                    }
+                                </InputSelect>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Price</label>
@@ -93,18 +111,36 @@
                     Cancel
                 </button>
             </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert-danger mt-3">
+                    @_errorMessage
+                </div>
+            }
         </EditForm>
     </div>
 </div>
 
 @code {
     private PurchaseOrderModel model = new();
+    private string? _errorMessage;
+    private List<Ingredient> _ingredients = new();
+    private List<Unit> _units = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         model.Date = DateTime.Now;
         model.Status = "Pending";
         model.LineItems.Add(new LineItemModel());
+
+        _ingredients = await Db.Ingredients
+            .OrderBy(i => i.Name)
+            .ToListAsync();
+
+        _units = await Db.Units
+            .OrderBy(u => u.Abbreviation)
+            .ToListAsync();
     }
 
     private void AddLineItem()
@@ -122,10 +158,38 @@
         return model.LineItems.Sum(x => x.Subtotal);
     }
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        // TODO: Save to database via service
-        Nav.NavigateTo("/purchase-orders");
+        _errorMessage = null;
+
+        try
+        {
+            var request = new CreatePurchaseOrderDTO
+            {
+                LocationId = 5, // TODO: replace with selected location
+                VendorName = model.Supplier,
+                VendorContact = null,
+                ExpectedDeliveryDate = model.Date,
+                Notes = model.Notes,
+                Lines = model.LineItems
+                    .Select(li => new CreatePurchaseOrderLineDTO
+                    {
+                        IngredientId = li.IngredientId,
+                        UnitId = li.UnitId,
+                        QuantityOrdered = li.Quantity,
+                        UnitPrice = li.UnitPrice
+                    })
+                    .ToList()
+            };
+
+            var created = await PurchaseOrderService.CreateDraftAsync(request);
+            @* Nav.NavigateTo($"/purchase-orders/{created.Id}"); *@
+            Nav.NavigateTo("/purchase-orders");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
     }
 
     private void Cancel()
@@ -145,9 +209,9 @@
 
     private class LineItemModel
     {
-        public string ItemName { get; set; } = string.Empty;
+        public int IngredientId { get; set; }
         public int Quantity { get; set; } = 1;
-        public string Unit { get; set; } = "ea";
+        public int UnitId { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Subtotal => Quantity * UnitPrice;
     }

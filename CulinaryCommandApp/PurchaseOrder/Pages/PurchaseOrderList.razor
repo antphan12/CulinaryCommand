@@ -1,5 +1,7 @@
 @inject NavigationManager Nav
 @inject IJSRuntime Js
+@inject CulinaryCommand.Data.AppDbContext Db
+@using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
 
 <h3 class="mb-3">Purchase Orders</h3>
@@ -66,37 +68,23 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Mock data for baseline - replace with actual service call
         await LoadPurchaseOrders();
     }
 
     private async Task LoadPurchaseOrders()
     {
-        // Simulate loading delay
-        await Task.Delay(500);
-        
-        // Mock data - replace with actual service
-        items = new List<PurchaseOrderViewModel>
-        {
-            new PurchaseOrderViewModel
+        items = await Db.PurchaseOrders
+            .OrderByDescending(po => po.OrderDate)
+            .Select(po => new PurchaseOrderViewModel
             {
-                Id = 1,
-                PoNumber = "PO-2025-001",
-                Date = DateTime.Now.AddDays(-5),
-                Supplier = "ABC Suppliers",
-                Status = "Pending",
-                Total = 1250.50m
-            },
-            new PurchaseOrderViewModel
-            {
-                Id = 2,
-                PoNumber = "PO-2025-002",
-                Date = DateTime.Now.AddDays(-2),
-                Supplier = "XYZ Distributors",
-                Status = "Approved",
-                Total = 890.75m
-            }
-        };
+                Id = po.Id,
+                PoNumber = po.OrderNumber,
+                Date = po.OrderDate,
+                Supplier = po.VendorName,
+                Status = po.Status.ToString(),
+                Total = po.Lines.Sum(l => l.QuantityOrdered * l.UnitPrice)
+            })
+            .ToListAsync();
     }
 
     private string GetStatusBadgeClass(string status) => status switch
@@ -116,12 +104,11 @@ else
     {
         if (await Js.InvokeAsync<bool>("confirm", "Are you sure you want to delete this purchase order?"))
         {
-            // TODO: Call service to delete
+            // TODO: Call service to delete from database as well
             items = items?.Where(x => x.Id != id).ToList();
         }
     }
 
-    // View model - move to separate file when integrating with actual entities
     private class PurchaseOrderViewModel
     {
         public int Id { get; set; }
