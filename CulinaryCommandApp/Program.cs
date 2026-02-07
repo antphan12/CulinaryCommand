@@ -1,86 +1,110 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+
 using CulinaryCommand.Data;
 using CulinaryCommand.Services;
 using CulinaryCommand.Inventory.Services;
 using CulinaryCommand.PurchaseOrder.Services;
 using CulinaryCommand.Inventory;
 using CulinaryCommand.Inventory.Services.Interfaces;
-using System; // for Version, TimeSpan
-using System.Linq;
-using CulinaryCommand.Components; // for args.Any
-using Google.GenAI;
+using CulinaryCommand.Components;
 using CulinaryCommandApp.AIDashboard.Services.Reporting;
-
+using Google.GenAI;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// FORCE EF to load your config when running "dotnet ef"
-// builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-// builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
-
-// Add services to the container.
+//
+// =====================
+// UI
+// =====================
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Register Google GenAI client and AIReportingService so they can be injected.
-// The Client will pick up the GOOGLE_API_KEY from environment variables (set in deploy.yml).
+//
+// =====================
+// Cognito Authentication (MUST be before Build)
+// =====================
+// ===== Cognito Auth (OIDC) =====
+builder.Services
+  .AddAuthentication(options =>
+  {
+      options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+      options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+  })
+  .AddCookie()
+  .AddOpenIdConnect(options =>
+  {
+      var userPoolId = "us-east-2_SULe0c9vr";
+      var region = "us-east-2";
+
+      options.Authority = $"https://cognito-idp.{region}.amazonaws.com/{userPoolId}";
+      options.MetadataAddress = $"{options.Authority}/.well-known/openid-configuration";
+
+      options.ClientId = "55joip0viah9qtj7dndhvma2gt";
+      options.ClientSecret = Environment.GetEnvironmentVariable("COGNITO_CLIENT_SECRET"); // don’t hardcode
+
+      options.ResponseType = OpenIdConnectResponseType.Code;
+      options.SaveTokens = true;
+
+      options.CallbackPath = "/signin-oidc";
+      options.SignedOutCallbackPath = "/signout-callback-oidc";
+
+      options.RequireHttpsMetadata = true; // keep true
+
+      options.Scope.Clear();
+      options.Scope.Add("openid");
+      options.Scope.Add("email");
+      options.Scope.Add("profile");
+
+      options.TokenValidationParameters.NameClaimType = "cognito:username";
+      options.TokenValidationParameters.RoleClaimType = "cognito:groups";
+  });
+
+builder.Services.AddAuthorization();
+
+
+//
+// =====================
+// AI Services
+// =====================
 builder.Services.AddSingleton<Client>(_ => new Client());
 builder.Services.AddScoped<AIReportingService>();
 
-// DB hookup
-// var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-// if (string.IsNullOrWhiteSpace(conn))
-// {
-//     throw new InvalidOperationException("Missing connection string 'Default'. Set ConnectionStrings__Default via environment or config.");
-// }
-// Console.WriteLine("CONNECTION STRING FROM CONFIG:");
-// Console.WriteLine(conn);
-
-
-// builder.Services.AddDbContext<AppDbContext>(opt =>
-//     opt.UseMySql(conn, new MySqlServerVersion(new Version(8, 0, 36)),
-//         mySqlOptions => mySqlOptions.EnableRetryOnFailure()
-//     )
-// );
-
-// DB hookup
+//
+// =====================
+// Database
+// =====================
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(conn))
 {
-    throw new InvalidOperationException("Missing connection string 'DefaultConnection'. Set ConnectionStrings__DefaultConnection via environment or config.");
+    throw new InvalidOperationException(
+        "Missing connection string 'DefaultConnection'");
 }
-
-// Mask password for logs (primarily for debugging in the Lightsail instance)
-string MaskPwd(string s)
-{
-    if (string.IsNullOrEmpty(s)) return s;
-    var parts = s.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-    for (int i = 0; i < parts.Length; i++)
-    {
-        if (parts[i].StartsWith("Pwd=", StringComparison.OrdinalIgnoreCase))
-            parts[i] = "Pwd=****";
-    }
-    return string.Join(';', parts);
-}
-Console.WriteLine($"[Startup] Using MySQL connection: {MaskPwd(conn)}");
 
 builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseMySql(conn, new MySqlServerVersion(new Version(8, 0, 36)), mySqlOpts =>
-    {
-        // Enable transient retry for RDS connectivity hiccups
-        mySqlOpts.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
-    }));
+    opt.UseMySql(
+        conn,
+        new MySqlServerVersion(new Version(8, 0, 36)),
+        mySqlOpts => mySqlOpts.EnableRetryOnFailure()
+    )
+);
 
-// registers services with Scoped lifetime.
+//
+// =====================
+// Application Services
+// =====================
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<RecipeService>();
 builder.Services.AddScoped<UnitService>();
 builder.Services.AddScoped<IngredientService>();
+builder.Services.AddScoped<IIngredientService, IngredientService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<LocationState>();
-builder.Services.AddScoped<IIngredientService, IngredientService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IUnitService, UnitService>();
 builder.Services.AddScoped<IInventoryTransactionService, InventoryTransactionService>();
@@ -90,50 +114,61 @@ builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddSingleton<EnumService>();
 
+//
+// =====================
+// Build App
+// =====================
 var app = builder.Build();
 
-// Determine whether the app should only run migrations and exit
-var migrateOnly = (Environment.GetEnvironmentVariable("MIGRATE_ONLY")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
-                  || (args != null && args.Any(a => a.Equals("--migrate-only", StringComparison.OrdinalIgnoreCase)));
-
-// Apply pending EF Core migrations at startup
+//
+// =====================
+// Apply EF Migrations
+// =====================
 using (var scope = app.Services.CreateScope())
 {
     try
     {
-        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        database.Database.Migrate();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"[Startup] Migration failed: {ex.GetType().Name} - {ex.Message}");
-        // Optionally: keep running without schema update; remove this catch to fail hard instead
+        Console.WriteLine($"[Startup] Migration warning: {ex.Message}");
     }
 }
 
-if (migrateOnly)
-{
-    Console.WriteLine("[Startup] MIGRATE_ONLY set; exiting after applying migrations.");
-    return;
-}
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-
-// Temporarily disable HTTPS redirect for development
-//app.UseHttpsRedirection();
+//
+// =====================
+// Middleware
+// =====================
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.UseAuthentication();
+app.UseAuthorization();
+  
+//
+// =====================
+// Routes
+// =====================
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Simple health endpoint for load balancers/CI checks
 app.MapGet("/health", () => "OK");
+
+app.MapGet("/login", async (HttpContext ctx) =>
+{
+    await ctx.ChallengeAsync(
+        OpenIdConnectDefaults.AuthenticationScheme,
+        new AuthenticationProperties { RedirectUri = "/" }
+    );
+});
+
+app.MapGet("/logout", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    await ctx.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme,
+        new AuthenticationProperties { RedirectUri = "/" });
+});
 
 app.Run();
