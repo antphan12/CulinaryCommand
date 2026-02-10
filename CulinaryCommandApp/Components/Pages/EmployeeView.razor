@@ -5,7 +5,7 @@
 
     <ul>
         <li>View your active tasks and prep items</li>
-        <li>Check your assigned location: @LocationState.CurrentLocation</li>
+        <li>Check your assigned location: @(LocationState.CurrentLocation?.Name ?? "Not assigned")</li>
         <li>Submit updates to your manager</li>
     </ul>
 </div>
