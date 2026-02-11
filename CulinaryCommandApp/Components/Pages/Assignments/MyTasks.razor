@@ -79,6 +79,7 @@ else
 
         selectedLocationId = LocationState.CurrentLocation?.Id;
 
+        LocationState.OnChange -= HandleLocationStateChanged;
         LocationState.OnChange += HandleLocationStateChanged;
 
         await LoadTasksAsync();
