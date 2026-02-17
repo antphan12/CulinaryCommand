@@ -54,7 +54,6 @@ else
                 }
                 else
                 {
-                    <!-- your existing rendering unchanged -->
                     <div class="row g-3">
                         <div class="col-md-4">
                             <div class="card h-100">
@@ -169,20 +168,19 @@ else
             _aiLoading = true;
             StateHasChanged();
 
-            var csvPath = Path.Combine(Env.ContentRootPath, "AIDashboard", "Services", "Reporting", "test_data.csv");
-            _aiAnalysis = await ReportingService.AnalyzeCsvAsync(csvPath);
-
-            @* if (!string.IsNullOrWhiteSpace(_aiAnalysis))
-            {
-                var csvPath = Path.Combine(Env.ContentRootPath, "AIDashboard", "Services", "Reporting", "test_data.csv");
-                _aiAnalysis = await ReportingService.AnalyzeCsvAsync(csvPath);
-                
-                // Try to deserialize the returned JSON into the DTO so we can render structured cards UI.
-                if (!string.IsNullOrWhiteSpace(_aiAnalysis))
+            try{
+               if (!string.IsNullOrWhiteSpace(_aiAnalysis))
                 {
-                    var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    _aiAnalysisObj = System.Text.Json.JsonSerializer.Deserialize<AIAnalysisResultDTO>(_aiAnalysis, options);
-                }
+                    var csvPath = Path.Combine(Env.ContentRootPath, "AIDashboard", "Services", "Reporting", "test_data.csv");
+                    _aiAnalysis = await ReportingService.AnalyzeCsvAsync(csvPath);
+                    
+                    // Try to deserialize the returned JSON into the DTO so we can render structured cards UI.
+                    if (!string.IsNullOrWhiteSpace(_aiAnalysis))
+                    {
+                        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        _aiAnalysisObj = System.Text.Json.JsonSerializer.Deserialize<AIAnalysisResultDTO>(_aiAnalysis, options);
+                    }
+                } 
             }
             catch(Exception e)
             {
@@ -195,15 +193,14 @@ else
                 _aiLoading = false;
                 StateHasChanged();
             }
-            _aiLoading = false; *@
-            _aiAnalysisObj = null;          //  Uncoomment above and delete curent like to activate AI
+            _aiLoading = false;
+            //_aiAnalysisObj = null;          //  Uncoomment above and delete curent like to activate AI
             StateHasChanged();
         }
     }
 
     private void NavigateToSignIn()
     {
-        // This should go to your Cognito login page once that route is finalized.
         Nav.NavigateTo("/login", forceLoad: true);
     }
 }

@@ -87,24 +87,24 @@ builder.Services.AddAuthorization();
 // =====================
 // AI Services
 // =====================
-// builder.Services.AddSingleton<Client>(_ => new Client());
-// builder.Services.AddScoped<AIReportingService>();
+builder.Services.AddSingleton<Client>(_ => new Client());
+builder.Services.AddScoped<AIReportingService>();
 
-var googleKey =
-    Environment.GetEnvironmentVariable("GOOGLE_API_KEY")
-    ?? builder.Configuration["Google:ApiKey"]; // optional appsettings slot
+// var googleKey =
+//     Environment.GetEnvironmentVariable("GOOGLE_API_KEY")
+//     ?? builder.Configuration["Google:ApiKey"]; // optional appsettings slot
 
-if (!string.IsNullOrWhiteSpace(googleKey))
-{
-    builder.Services.AddSingleton(_ => new Google.GenAI.Client(apiKey: googleKey));
-    builder.Services.AddScoped<AIReportingService>();
-    Console.WriteLine("✅ AI enabled (GOOGLE_API_KEY found).");
-}
-else
-{
-    Console.WriteLine("⚠️ GOOGLE_API_KEY not set; AI features disabled.");
-    // Do NOT register AIReportingService at all.
-}
+// if (!string.IsNullOrWhiteSpace(googleKey))
+// {
+//     builder.Services.AddSingleton(_ => new Google.GenAI.Client(apiKey: googleKey));
+//     builder.Services.AddScoped<AIReportingService>();
+//     Console.WriteLine("✅ AI enabled (GOOGLE_API_KEY found).");
+// }
+// else
+// {
+//     Console.WriteLine("⚠️ GOOGLE_API_KEY not set; AI features disabled.");
+//     // Do NOT register AIReportingService at all.
+// }
 
 
 //
