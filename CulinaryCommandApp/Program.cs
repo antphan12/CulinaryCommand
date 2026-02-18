@@ -17,6 +17,8 @@ using CulinaryCommand.Services.UserContextSpace;
 using Amazon.CognitoIdentityProvider;
 using Amazon.Extensions.NETCore.Setup;
 using CulinaryCommandApp.Services;
+using Microsoft.AspNetCore.HttpOverrides;
+
 
 
 
@@ -154,11 +156,22 @@ builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddSingleton<EnumService>();
 
+
+builder.Services.Configure<ForwardedHeadersOptions>(o =>
+{
+    o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    o.KnownNetworks.Clear();
+    o.KnownProxies.Clear();
+});
+
+
 //
 // =====================
 // Build App
 // =====================
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Determine whether the app should only run migrations and exit
 var migrateOnly = (Environment.GetEnvironmentVariable("MIGRATE_ONLY")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
