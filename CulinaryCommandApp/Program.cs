@@ -19,6 +19,7 @@ using Amazon.Extensions.NETCore.Setup;
 using CulinaryCommandApp.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.DataProtection;
+using CulinaryCommand.Vendor.Services;
 using System.IO;
 
 
