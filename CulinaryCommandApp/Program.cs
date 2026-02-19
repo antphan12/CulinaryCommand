@@ -165,6 +165,9 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddSingleton<EnumService>();
+builder.Services.AddScoped<IVendorService, VendorService>();
+builder.Services.AddScoped<LogoDevService>();
+builder.Services.AddHttpClient();
 
 
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
