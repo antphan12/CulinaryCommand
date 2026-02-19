@@ -40,6 +40,7 @@ namespace CulinaryCommandUnitTests.Inventory.DTOs
             {
                 Name = "Flour",
                 UnitId = 1,
+                LocationId = 1,
                 CurrentQuantity = 10m,
                 Price = 2.99m,
                 Category = "Baking",
