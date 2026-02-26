@@ -70,9 +70,7 @@
                             <div class="cc-section-note">Add one or more restaurant locations.</div>
                         </div>
 
-                        <button type="button"
-                                class="btn btn-outline-success cc-btn-sm"
-                                @onclick="AddLocation"
+                        <button type="button" class="btn btn-outline-success cc-btn-sm" @onclick="AddLocation"
                                 disabled="@isSubmitting">
                             <i class="bi bi-plus-lg me-1"></i> Add Location
                         </button>
@@ -86,8 +84,7 @@
                             <div class="cc-loc-head">
                                 <div class="cc-loc-title">Location @(locIndex + 1)</div>
 
-                                <button type="button"
-                                        class="btn btn-outline-danger cc-btn-sm"
+                                <button type="button" class="btn btn-outline-danger cc-btn-sm"
                                         @onclick="() => RemoveLocation(loc)"
                                         disabled="@(isSubmitting || Signup.Locations.Count == 1)">
                                     Remove
@@ -155,13 +152,35 @@
 
                         <div class="cc-span2">
                             <label class="form-label">Admin Password</label>
-                            <InputText type="password" class="form-control cc-input" @bind-Value="Signup.Admin.Password" />
-                            <ValidationMessage For="@(() => Signup.Admin.Password)" />
+                            
+                            <input type="password" 
+                                class="form-control cc-input" 
+                                @bind="Signup.Admin.Password" 
+                                @bind:event="oninput" />
+
+                            <ul class="password-req-list" style="list-style-type: none;">
+                                <li class="@(PasswordHasMinLength ? "req-met" : "req-unmet")">
+                                    @(PasswordHasMinLength ? "✓" :"✕") Password must be at least 8 characters.
+                                </li>
+                                <li class="@(PasswordHasUpper ? "req-met" : "req-unmet")">
+                                    @(PasswordHasUpper ? "✓" :"✕") Password must contain at least 1 uppercase letter.
+                                </li>
+                                <li class="@(PasswordHasLower ? "req-met" : "req-unmet")">
+                                    @(PasswordHasLower ? "✓" :"✕") Password must contain at least 1 lowercase letter.
+                                </li>
+                                <li class="@(PasswordHasNumber ? "req-met" : "req-unmet")">
+                                    @(PasswordHasNumber ? "✓" :"✕") Password must contain at least 1 number.
+                                </li>
+                                <li class="@(PasswordHasSymbol ? "req-met" : "req-unmet")">
+                                    @(PasswordHasSymbol ? "✓" :"✕") Password must contain at least 1 special character.
+                                </li>
+                            </ul>
                         </div>
 
                         <div class="cc-span2">
                             <label class="form-label">Confirm Password</label>
-                            <InputText type="password" class="form-control cc-input" @bind-Value="Signup.Admin.ConfirmPassword" />
+                            <InputText type="password" class="form-control cc-input"
+                                        @bind-Value="Signup.Admin.ConfirmPassword" />
                             <ValidationMessage For="@(() => Signup.Admin.ConfirmPassword)" />
                         </div>
                     </div>
@@ -182,43 +201,46 @@
 </div>
 
 <style>
-    .cc-hero{
+    .cc-hero {
         min-height: calc(100vh - 0px);
-        display:flex;
-        align-items:flex-start;
-        justify-content:center;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
         padding: 44px 18px;
         background:
-            radial-gradient(900px 420px at 20% 10%, rgba(25,135,84,.14), transparent 60%),
-            radial-gradient(800px 380px at 80% 0%, rgba(0,0,0,.08), transparent 55%),
+            radial-gradient(900px 420px at 20% 10%, rgba(25, 135, 84, .14), transparent 60%),
+            radial-gradient(800px 380px at 80% 0%, rgba(0, 0, 0, .08), transparent 55%),
             #f8fafc;
     }
 
-    .cc-shell{ width:100%; max-width: 980px; }
+    .cc-shell {
+        width: 100%;
+        max-width: 980px;
+    }
 
-    .cc-top{
-        display:flex;
-        align-items:center;
+    .cc-top {
+        display: flex;
+        align-items: center;
         gap: 14px;
         margin-bottom: 14px;
         padding: 0 6px;
     }
 
-    .cc-mark{
+    .cc-mark {
         width: 52px;
         height: 52px;
         border-radius: 16px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        background: rgba(25,135,84,.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(25, 135, 84, .12);
         color: #198754;
         font-size: 22px;
-        border: 1px solid rgba(25,135,84,.18);
+        border: 1px solid rgba(25, 135, 84, .18);
         flex: 0 0 auto;
     }
 
-    .cc-title{
+    .cc-title {
         font-weight: 850;
         letter-spacing: -0.5px;
         font-size: 28px;
@@ -226,117 +248,137 @@
         color: #111827;
     }
 
-    .cc-subtitle{
+    .cc-subtitle {
         margin-top: 6px;
         font-size: 14.5px;
         color: #4b5563;
         max-width: 680px;
     }
 
-    .cc-formcard{
+    .cc-formcard {
         border-radius: 18px;
         background: #ffffff;
-        border: 1px solid rgba(17,24,39,.08);
-        box-shadow: 0 10px 30px rgba(17,24,39,.06);
+        border: 1px solid rgba(17, 24, 39, .08);
+        box-shadow: 0 10px 30px rgba(17, 24, 39, .06);
         padding: 18px;
     }
 
-    .cc-section{ padding: 4px 2px; }
+    .cc-section {
+        padding: 4px 2px;
+    }
 
-    .cc-section-head{ margin-bottom: 10px; }
+    .cc-section-head {
+        margin-bottom: 10px;
+    }
 
-    .cc-section-row{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
+    .cc-section-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 12px;
         margin-bottom: 10px;
     }
 
-    .cc-section-title{
+    .cc-section-title {
         font-weight: 850;
         color: #111827;
         letter-spacing: -0.2px;
         font-size: 16px;
     }
 
-    .cc-section-note{
+    .cc-section-note {
         margin-top: 4px;
         color: #6b7280;
         font-size: 12.5px;
         line-height: 1.35;
     }
 
-    .cc-divider{
+    .cc-divider {
         height: 1px;
-        background: rgba(17,24,39,.08);
+        background: rgba(17, 24, 39, .08);
         margin: 14px 0;
     }
 
-    .cc-grid2{
-        display:grid;
+    .cc-grid2 {
+        display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
     }
 
-    .cc-span2{ grid-column: span 2; }
-
-    @* @media (max-width: 860px){
-        .cc-grid2{ grid-template-columns: 1fr; }
-        .cc-span2{ grid-column: span 1; }
-        .cc-section-row{ flex-direction: column; align-items: stretch; }
-    } *@
+    .cc-span2 {
+        grid-column: span 2;
+    }
 
     .cc-input{
         border-radius: 12px;
         padding: 10px 12px;
     }
 
-    .cc-btn{
+    .cc-btn {
         border-radius: 12px;
         padding: 12px 14px;
         font-weight: 850;
     }
 
-    .cc-btn-sm{
+    .cc-btn-sm {
         border-radius: 999px;
         font-weight: 800;
         padding: 6px 12px;
     }
 
-    .cc-loc-card{
+    .cc-loc-card {
         border-radius: 16px;
-        border: 1px solid rgba(17,24,39,.08);
+        border: 1px solid rgba(17, 24, 39, .08);
         background:
-            linear-gradient(180deg, rgba(17,24,39,.02), rgba(17,24,39,0)),
+            linear-gradient(180deg, rgba(17, 24, 39, .02), rgba(17, 24, 39, 0)),
             #ffffff;
         padding: 14px;
         margin-bottom: 12px;
     }
 
-    .cc-loc-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
+    .cc-loc-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 10px;
         margin-bottom: 10px;
     }
 
-    .cc-loc-title{
+    .cc-loc-title {
         font-weight: 850;
         color: #111827;
         font-size: 14px;
     }
 
-    .cc-footlink{
-        text-align:center;
+    .cc-footlink {
+        text-align: center;
         margin-top: 14px;
         font-size: 13px;
     }
 
-    .cc-footlink a{
-        text-decoration:none;
+    .cc-footlink a {
+        text-decoration: none;
         font-weight: 800;
+    }
+
+    .password-req-list {
+                list-style: none;
+            margin: 8px 0 0 0;
+            padding: 0;
+                font - size: 13px;
+            }
+
+    .password-req-list li {
+                margin-bottom: 2px;
+            transition: color 0.2s;
+            }
+
+    .req-met {
+            color: #198754;
+    }
+
+    .req-unmet {
+            color: #dc3545;
     }
 </style>
 
@@ -349,6 +391,26 @@
 
     private string FirstName { get; set; } = string.Empty;
     private string LastName { get; set; } = string.Empty;
+
+    // Password requirement flags
+    private bool PasswordHasMinLength => Signup.Admin.Password?.Length >= 8;
+    private bool PasswordHasUpper => !string.IsNullOrEmpty(Signup.Admin.Password) &&
+    Signup.Admin.Password.Any(char.IsUpper);
+    private bool PasswordHasLower => !string.IsNullOrEmpty(Signup.Admin.Password) &&
+    Signup.Admin.Password.Any(char.IsLower);
+    private bool PasswordHasNumber => !string.IsNullOrEmpty(Signup.Admin.Password) &&
+    Signup.Admin.Password.Any(char.IsDigit);
+    private bool PasswordHasSymbol => !string.IsNullOrEmpty(Signup.Admin.Password) && Signup.Admin.Password.Any(c =>
+    CognitoSymbols.Contains(c));
+
+    // Cognito symbol set (same as in CognitoPasswordAttribute)
+    private const string CognitoSymbols = "^$*.[\\]{}()?\"!@#%&/\\,><':;|_~`=+-";
+
+    private void OnPasswordInput(ChangeEventArgs e)
+    {
+        // This triggers UI update as the password changes
+        StateHasChanged();
+    }
 
     protected override void OnInitialized()
     {
@@ -373,7 +435,7 @@
     {
         errorMessage = "";
         successMessage = "";
-        
+
         if (string.IsNullOrWhiteSpace(FirstName) || string.IsNullOrWhiteSpace(LastName))
         {
             errorMessage = "First and last name are required.";
