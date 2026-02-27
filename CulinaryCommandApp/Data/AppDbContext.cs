@@ -120,7 +120,7 @@ namespace CulinaryCommand.Data
             // Recipe belongs to a Location
             modelBuilder.Entity<CulinaryCommandApp.Recipe.Entities.Recipe>()
                 .HasOne(r => r.Location)
-                .WithMany()
+                .WithMany(l => l.Recipes)
                 .HasForeignKey(r => r.LocationId)
                 .OnDelete(DeleteBehavior.Cascade);
 

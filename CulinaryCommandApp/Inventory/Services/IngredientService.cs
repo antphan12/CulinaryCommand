@@ -27,6 +27,17 @@ namespace CulinaryCommandApp.Inventory.Services
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Ingredient>> GetIngredientsByLocationAsync(int locationId, CancellationToken cancellationToken = default)
+        {
+            return await _db.Ingredients
+                        .AsNoTracking()
+                        .Include(i => i.Unit)
+                        .Where(i => i.LocationId == locationId)
+                        .OrderBy(i => i.Category)
+                        .ThenBy(i => i.Name)
+                        .ToListAsync(cancellationToken);
+        }
+
         public async Task<List<Ingredient>> GetByCategoryAsync(string category, CancellationToken cancellationToken = default)
         {
             return await _db.Ingredients
