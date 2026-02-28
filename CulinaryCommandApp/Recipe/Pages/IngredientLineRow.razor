@@ -1,5 +1,5 @@
 @using CulinaryCommand.Data.Entities
-
+@using CulinaryCommandApp.Inventory.Entities
 
 
 <div class="ingredient-line-row">
@@ -31,7 +31,32 @@
             }
         </select>
     }
+    else {
+        <select class="line-select"
+                value="@Line.SubRecipeId"
+                @onchange="OnSubRecipeChanged">
+            <option value="">- select sub-recipe-</option>
+            @foreach (var subRecipe in availableSubRecipes) {
+                <option value="@subRecipe.RecipeId">@subRecipe.Title</option>
+            }
+        </select>
+    }
 
+    <input type="number"
+           class="line-qty"
+           min="0"
+           step="0.01"
+           placeholder="Qty"
+           @bind="Line.Quantity"/>
+
+    <select class="line-select line-unit"
+            value="@Line.UnitId"
+            @onchange="OnUnitChanged">
+        <option value="0">- unit -</option>
+        @foreach (var unit in availableUnits) {
+
+        }
+    </select>
 </div>
 
 
@@ -45,6 +70,8 @@
     private bool IsSubRecipeMode => Line.SubRecipeId.HasValue;
     private List<Ingredient> availableIngredients = new();
     private List<String> ingredientCategories = new();
+    private List<Recipe> availableSubRecipes = new();
+    private List<Unit> availableUnits = new ();
 
 
     private IEnumerable<Ingredient> IngredientsByCategory(string category) => availableIngredients
@@ -65,11 +92,26 @@
     }
 
     // update Line.IngredientId from select change
-    private void OnIngredientChanged(ChangeEventArgs e) { 
+    private void OnIngredientChanged(ChangeEventArgs ingredientChangeEvent) { 
         // try parse selected value as int
-        if (int.TryParse(e.Value?.ToString(), out int id))
+        if (int.TryParse(ingredientChangeEvent.Value?.ToString(), out int id))
             Line.IngredientId = id; // assign parsed id when valid
         else
             Line.IngredientId = null; // clear id when parse fails
+    }
+
+
+    private void OnSubRecipeChanged(ChangeEventArgs subRecipeChangeEvent) {
+
+        if (int.TryParse(subRecipeChangeEvent.Value?.ToString(), out int id))
+            Line.SubRecipeId = id;
+        else
+            Line.SubRecipe = null;
+    }
+
+    
+    private void OnUnitChanged(ChangeEventArgs unitChangeEvent) {
+        if (int.TryParse(unitChangeEvent.Value?.ToString(), out int id))
+            Line.UnitId = id;
     }
 }
