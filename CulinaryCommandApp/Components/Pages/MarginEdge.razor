@@ -1,0 +1,155 @@
+@page "/margin-edge"
+@using CulinaryCommand.Services
+@using CulinaryCommand.Services.UserContextSpace
+@using System.Web @* For HttpUtility if needed, but simple string building works too *@
+@inject IUserContextService UserCtx
+@inject HttpClient Http
+
+<div class="container mt-4">
+    <h3>MarginEdge API Tester</h3>
+    <hr />
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label fw-bold">API Key</label>
+            <input type="password" class="form-control" @bind="apiKey" placeholder="Enter MarginEdge API Key" />
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Endpoint</label>
+            <select class="form-select" @onchange="OnEndpointChanged">
+                @foreach (var endpoint in Endpoints)
+                {
+                    <option value="@endpoint.Path">@endpoint.Name (@endpoint.Method)</option>
+                }
+            </select>
+        </div>
+
+        @if (requiresLocationId) {
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Location ID (restaurantUnitId)</label>
+                <input type="text" class="form-control" @bind="locationId" placeholder="GUID..." />
+            </div>
+        }
+
+        @if (requiresId)
+        {
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Resource ID (order/vendor)</label>
+                <input type="text" class="form-control" @bind="resourceId" placeholder="ID..." />
+            </div>
+        }
+    </div>
+
+    @if (currentPath == "/orders")
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Start Date</label>
+                <input type="date" class="form-control" @bind="startDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">End Date</label>
+                <input type="date" class="form-control" @bind="endDate" />
+            </div>
+        </div>
+    }
+
+    <div class="row mb-3">
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" @onclick="ExecuteQuery" disabled="@string.IsNullOrEmpty(apiKey)">Run Query</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(apiResponse))
+    {
+        <div class="mt-4">
+            <h5>Response Result:</h5>
+            <pre class="p-3 bg-dark text-light border rounded" style="max-height: 600px; overflow: auto;">@apiResponse</pre>
+        </div>
+    }
+</div>
+
+@code {
+    private string apiKey = "";
+    private string apiResponse = "";
+    private string resourceId = "";
+    private string locationId = "";
+    private string currentPath = "/restaurantUnits";
+    
+    private DateTime startDate = DateTime.Today.AddDays(-7);
+    private DateTime endDate = DateTime.Today;
+
+    private bool requiresLocationId => 
+        new[] { "orders", "products", "categories", "vendors" }
+        .Any(keyword => currentPath.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+        
+    private bool requiresId => currentPath.Contains(":");
+
+    private List<EndpointInfo> Endpoints = new()
+    {
+        new("Get available restaurants", "/restaurantUnits", "GET"),
+        new("Get group categories", "/restaurantUnits/groupCategories", "GET"),
+        new("Get unit groups", "/restaurantUnits/groups", "GET"),
+        new("Get orders", "/orders", "GET"),
+        new("Get order detail", "/orders/:orderId", "GET"),
+        new("Get products", "/products", "GET"),
+        new("Get categories", "/categories", "GET"),
+        new("Get vendors", "/vendors", "GET"),
+        new("Get vendor items", "/vendors/:vendorId/vendorItems", "GET")
+    };
+
+    private void OnEndpointChanged(ChangeEventArgs e)
+    {
+        currentPath = e.Value?.ToString() ?? "";
+        apiResponse = "";
+    }
+
+    private async Task ExecuteQuery()
+    {
+        try
+        {
+            apiResponse = "Loading...";
+            
+            // 1. Path Replacements
+            var requestPath = currentPath.Replace(":orderId", resourceId)
+                                         .Replace(":vendorId", resourceId);
+
+            // 2. Query String Construction
+            var queryParams = new List<string>();
+
+            if (requiresLocationId && !string.IsNullOrWhiteSpace(locationId))
+            {
+                // The MarginEdge API usually expects 'restaurantUnitId' for these
+                queryParams.Add($"restaurantUnitId={locationId}");
+            }
+
+            if (currentPath == "/orders")
+            {
+                queryParams.Add($"startDate={startDate:yyyy-MM-dd}");
+                queryParams.Add($"endDate={endDate:yyyy-MM-dd}");
+            }
+
+            var queryString = queryParams.Any() ? "?" + string.Join("&", queryParams) : "";
+            var finalUrl = $"https://api.marginedge.com/public{requestPath}{queryString}";
+
+            // 3. Request Execution
+            var request = new HttpRequestMessage(HttpMethod.Get, finalUrl);
+            request.Headers.Add("X-API-KEY", apiKey);
+
+            var response = await Http.SendAsync(request);
+            var content = await response.Content.ReadAsStringAsync();
+            
+            // Output raw JSON
+            apiResponse = content; 
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+        }
+    }
+
+    public record EndpointInfo(string Name, string Path, string Method);
+}
