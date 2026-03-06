@@ -12,6 +12,7 @@ using CulinaryCommand.Inventory;
 using CulinaryCommandApp.Inventory.Services.Interfaces;
 using CulinaryCommandApp.AIDashboard.Services.Reporting;
 using CulinaryCommandApp.Recipe.Services;
+using CulinaryCommandApp.Recipe.Services.Interfaces;
 using Google.GenAI;
 using System;
 using CulinaryCommand.Services.UserContextSpace;
@@ -152,6 +153,7 @@ builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
 builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();
 builder.Services.AddScoped<CognitoProvisioningService>();
 
+builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<RecipeService>();
 builder.Services.AddScoped<UnitService>();
 builder.Services.AddScoped<IngredientService>();
