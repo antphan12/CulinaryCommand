@@ -1,0 +1,101 @@
+@using Microsoft.AspNetCore.Components
+
+<div>
+    <button class="feedback-btn" @onclick="ShowDialog">Feedback</button>
+
+    @if (showDialog)
+    {
+        <div class="feedback-dialog">
+            <div class="feedback-content">
+                <h3>Submit Feedback</h3>
+                <div>
+                    <label>User Role</label>
+                    <input @bind="userRole" />
+                </div>
+                <div>
+                    <label>Page</label>
+                    <input value="@currentPage" disabled />
+                </div>
+                <div>
+                    <label>Device</label>
+                    <input value="@deviceType" disabled />
+                </div>
+                <div>
+                    <label>Message</label>
+                    <textarea @bind="message" />
+                </div>
+                <div>
+                    <label>Screenshot (optional)</label>
+                    <input type="file" @onchange="OnScreenshotChange" />
+                </div>
+                <div>
+                    <button @onclick="SubmitFeedback">Submit</button>
+                    <button @onclick="CloseDialog">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showConfirmation)
+    {
+        <div class="feedback-confirmation">
+            Feedback submitted!
+        </div>
+    }
+</div>
+
+@code {
+    private bool showDialog;
+    private bool showConfirmation;
+    private string? userRole;
+    private string? message;
+    private string? screenshotBase64;
+    private string currentPage => NavigationManager?.Uri ?? "";
+    private string deviceType => GetDeviceType();
+    private string timestamp => DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    private void ShowDialog()
+    {
+        showDialog = true;
+        showConfirmation = false;
+    }
+
+    private void CloseDialog()
+    {
+        showDialog = false;
+    }
+
+    private async void SubmitFeedback()
+    {
+        showDialog = false;
+        showConfirmation = true;
+        Console.WriteLine($"User Role: {userRole}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
+        await Task.Delay(2000);
+        showConfirmation = false;
+        userRole = string.Empty;
+        message = string.Empty;
+        screenshotBase64 = string.Empty;
+    }
+
+    private void OnScreenshotChange(ChangeEventArgs e)
+    {
+        var file = e.Value as Microsoft.AspNetCore.Components.Forms.IBrowserFile;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream();
+            var buffer = new byte[file.Size];
+            stream.Read(buffer, 0, (int)file.Size);
+            screenshotBase64 = Convert.ToBase64String(buffer);
+        }
+    }
+
+    private string GetDeviceType()
+    {
+        // Basic device detection
+        // JS interop can be used for more accurate detection
+        return "Unknown";
+    }
+}
