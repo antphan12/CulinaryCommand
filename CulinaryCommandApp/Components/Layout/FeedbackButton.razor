@@ -1,4 +1,10 @@
 @using Microsoft.AspNetCore.Components
+@using CulinaryCommand.Services.UserContextSpace
+@inject IUserContextService UserCtx
+@inject NavigationManager Nav
+
+
+
 
 <div>
     <button class="feedback-btn" @onclick="ShowDialog">Feedback</button>
@@ -8,18 +14,6 @@
         <div class="feedback-dialog">
             <div class="feedback-content">
                 <h3>Submit Feedback</h3>
-                <div>
-                    <label>User Role</label>
-                    <input @bind="userRole" />
-                </div>
-                <div>
-                    <label>Page</label>
-                    <input value="@currentPage" disabled />
-                </div>
-                <div>
-                    <label>Device</label>
-                    <input value="@deviceType" disabled />
-                </div>
                 <div>
                     <label>Message</label>
                     <textarea @bind="message" />
@@ -47,15 +41,24 @@
 @code {
     private bool showDialog;
     private bool showConfirmation;
+    private UserContext? _ctx;
+
     private string? userRole;
     private string? message;
     private string? screenshotBase64;
-    private string currentPage => NavigationManager?.Uri ?? "";
+    private string currentPage => Nav?.Uri ?? "";
     private string deviceType => GetDeviceType();
     private string timestamp => DateTime.Now.ToString("yyyy-MM-dd HH:mm");
 
-    [Inject]
-    private NavigationManager? NavigationManager { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserCtx != null)
+        {
+            _ctx = await UserCtx.GetAsync();
+        }
+    }
 
     private void ShowDialog()
     {
@@ -72,7 +75,7 @@
     {
         showDialog = false;
         showConfirmation = true;
-        Console.WriteLine($"User Role: {userRole}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
+        Console.WriteLine($"User Role: {_ctx?.User?.Role}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
         await Task.Delay(2000);
         showConfirmation = false;
         userRole = string.Empty;
@@ -95,7 +98,6 @@
     private string GetDeviceType()
     {
         // Basic device detection
-        // JS interop can be used for more accurate detection
         return "Unknown";
     }
 }
