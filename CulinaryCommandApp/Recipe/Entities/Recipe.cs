@@ -33,7 +33,7 @@ namespace CulinaryCommandApp.Recipe.Entities
 
         // Optimistic concurrency token — backed by a MySQL timestamp(6) column
         // (ON UPDATE CURRENT_TIMESTAMP(6)), materialised as DateTime by the Pomelo provider.
-        [ConcurrencyCheck]
+        // ValueGeneratedOnAddOrUpdate + IsConcurrencyToken are set via fluent API in AppDbContext.
         public DateTime RowVersion { get; set; }
 
         // Navigation

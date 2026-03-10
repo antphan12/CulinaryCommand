@@ -124,6 +124,13 @@ namespace CulinaryCommand.Data
                 .HasForeignKey(r => r.LocationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // RowVersion is a MySQL timestamp(6) with DEFAULT/ON UPDATE CURRENT_TIMESTAMP(6).
+            // Mark it as database-generated so EF never sends DateTime.MinValue on INSERT/UPDATE.
+            modelBuilder.Entity<CulinaryCommandApp.Recipe.Entities.Recipe>()
+                .Property(r => r.RowVersion)
+                .ValueGeneratedOnAddOrUpdate()
+                .IsConcurrencyToken();
+
             // Tasks optionally references a Recipe (prep task)
             modelBuilder.Entity<Tasks>()
                 .HasOne(t => t.Recipe)
