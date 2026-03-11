@@ -65,7 +65,7 @@
   resize: vertical;
 }
 
-.feedback-content button {
+.feedback-content button:not(.feedback-type-btn) {
   margin-right: 8px;
   padding: 8px 16px;
   border: none;
@@ -87,6 +87,31 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 1200;
   font-size: 16px;
+}
+
+.feedback-type-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.feedback-type-btn {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #e0e0e0;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.feedback-type-btn:hover {
+    background-color: #d0d0d0;
+}
+
+.feedback-type-btn.active {
+    background-color: #1a73e8;
+    color: white;
+    border-color: #1a73e8;
 }
 @import url("https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@500;600&display=swap");

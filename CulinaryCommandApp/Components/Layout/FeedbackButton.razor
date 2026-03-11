@@ -14,25 +14,46 @@
     @if (showDialog)
     {
         <div class="feedback-dialog">
-            <div class="feedback-content">
-                <h3>Submit Feedback</h3>
-                <div>
-                    <label>Message</label>
-                    <textarea @bind="message" />
-                </div>
-                <div>
-                    <label>Screenshot (optional)</label>
-                    <input type="file" @onchange="OnScreenshotChange" />
-                </div>
-                <div>
-                    <button @onclick="SubmitFeedback">Submit</button>
-                    <button @onclick="CloseDialog">Cancel</button>
-                </div>
+    <div class="feedback-content">
+        <h3>Submit Feedback</h3>
+
+        <div>
+            <label>Type</label>
+            <div class="feedback-type-buttons">
+                <button class="feedback-type-btn @(feedbackType == "Bug" ? "active" : "")"
+                        @onclick='() => feedbackType = "Bug"'>
+                    Bug
+                </button>
+                <button class="feedback-type-btn @(feedbackType == "Feature" ? "active" : "")"
+                        @onclick='() => feedbackType = "Feature"'>
+                    Feature Request
+                </button>
+                <button class="feedback-type-btn @(feedbackType == "General" ? "active" : "")"
+                        @onclick='() => feedbackType = "General"'>
+                    General
+                </button>
             </div>
         </div>
+
+        <div>
+            <label>Message</label>
+            <textarea @bind="message" placeholder="@GetPlaceholder()" />
+        </div>
+
+        <div>
+            <label>Screenshot (optional)</label>
+            <input type="file" @onchange="OnScreenshotChange" />
+        </div>
+
+        <div>
+            <button @onclick="SubmitFeedback" disabled="@(feedbackType == null || string.IsNullOrWhiteSpace(message))">Submit</button>
+            <button @onclick="CloseDialog">Cancel</button>
+        </div>
+    </div>
+</div>
     }
 
-    @if (showConfirmation || true)
+    @if (showConfirmation)
     {
         <div class="feedback-confirmation">
             Feedback submitted!
@@ -51,6 +72,16 @@
     private string currentPage => Nav?.Uri ?? "";
     private string deviceType = "Unknown";
     private string timestamp => DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+
+    private string? feedbackType;
+
+    private string GetPlaceholder() => feedbackType switch
+    {
+        "Bug"     => "Describe what happened and steps to reproduce...",
+        "Feature" => "Describe the feature and why it would be helpful...",
+        "General" => "Share your thoughts...",
+        _         => "Select a type above first..."
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,6 +107,7 @@
     private void CloseDialog()
     {
         showDialog = false;
+        feedbackType = null;
     }
 
     @* private async void SubmitFeedback()
@@ -95,10 +127,11 @@
     showConfirmation = true;
     StateHasChanged(); // Force render to show confirmation immediately
 
-    Console.WriteLine($"User Role: {_ctx?.User?.Role}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
+    Console.WriteLine($"User Id: {_ctx?.User?.Id}\nUser Email: {_ctx?.User?.Email}\nUser Role: {_ctx?.User?.Role}\nFeedback Type: {feedbackType}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
 
     await Task.Delay(3500);
 
+    feedbackType = null;
     showConfirmation = false;
     userRole = string.Empty;
     message = string.Empty;
