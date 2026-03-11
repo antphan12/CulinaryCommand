@@ -32,7 +32,7 @@
         </div>
     }
 
-    @if (showConfirmation)
+    @if (showConfirmation || true)
     {
         <div class="feedback-confirmation">
             Feedback submitted!
@@ -78,7 +78,7 @@
         showDialog = false;
     }
 
-    private async void SubmitFeedback()
+    @* private async void SubmitFeedback()
     {
         showDialog = false;
         showConfirmation = true;
@@ -88,7 +88,24 @@
         userRole = string.Empty;
         message = string.Empty;
         screenshotBase64 = string.Empty;
-    }
+    } *@
+    private async Task SubmitFeedback()
+{
+    showDialog = false;
+    showConfirmation = true;
+    StateHasChanged(); // Force render to show confirmation immediately
+
+    Console.WriteLine($"User Role: {_ctx?.User?.Role}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
+
+    await Task.Delay(3500);
+
+    showConfirmation = false;
+    userRole = string.Empty;
+    message = string.Empty;
+    screenshotBase64 = string.Empty;
+
+    StateHasChanged(); // Force render to hide confirmation after delay
+}
 
     private void OnScreenshotChange(ChangeEventArgs e)
     {
