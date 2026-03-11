@@ -48,6 +48,11 @@ builder.Services
   .AddCookie()
   .AddOpenIdConnect(options =>
   {
+      options.CorrelationCookie.SameSite = SameSiteMode.None;
+      options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+      options.NonceCookie.SameSite = SameSiteMode.None;
+      options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
       options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
       // ---- Read Cognito config (env/appsettings) ----
