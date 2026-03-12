@@ -1,12 +1,11 @@
 @using Amazon.Runtime.Internal.UserAgent
 @using Microsoft.AspNetCore.Components
 @using CulinaryCommand.Services.UserContextSpace
+@using CulinaryCommand.Data.Entities
 @inject IUserContextService UserCtx
 @inject NavigationManager Nav
 @inject IJSRuntime JSRuntime
-
-
-
+@inject IFeedbackService FeedbackSvc
 
 <div>
     <button class="feedback-btn" @onclick="ShowDialog">Feedback</button>
@@ -110,24 +109,24 @@
         feedbackType = null;
     }
 
-    @* private async void SubmitFeedback()
-    {
-        showDialog = false;
-        showConfirmation = true;
-        Console.WriteLine($"User Role: {_ctx?.User?.Role}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
-        await Task.Delay(2000);
-        showConfirmation = false;
-        userRole = string.Empty;
-        message = string.Empty;
-        screenshotBase64 = string.Empty;
-    } *@
     private async Task SubmitFeedback()
 {
     showDialog = false;
     showConfirmation = true;
     StateHasChanged(); // Force render to show confirmation immediately
 
-    Console.WriteLine($"User Id: {_ctx?.User?.Id}\nUser Email: {_ctx?.User?.Email}\nUser Role: {_ctx?.User?.Role}\nFeedback Type: {feedbackType}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}");
+    @* Console.WriteLine($"User Id: {_ctx?.User?.Id}\nUser Email: {_ctx?.User?.Email}\nUser Role: {_ctx?.User?.Role}\nFeedback Type: {feedbackType}\nPage: {currentPage}\nDevice: {deviceType}\nTime: {timestamp}\nMessage: {message}\nScreenshot: {screenshotBase64}"); *@
+    await FeedbackSvc.SubmitFeedbackAsync(new Feedback
+    {
+        UserId = _ctx?.User?.Id,
+        UserEmail = _ctx?.User?.Email,
+        UserRole = _ctx?.User?.Role,
+        FeedbackType = feedbackType!,
+        Page = currentPage,
+        Device = deviceType,
+        Message = message!,
+        ScreenshotBase64 = screenshotBase64
+    });
 
     await Task.Delay(3500);
 
