@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace CulinaryCommand.Data.Entities
 {
     public class Feedback
@@ -11,6 +13,7 @@ namespace CulinaryCommand.Data.Entities
         public string? Device { get; set; }
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
         public string Message { get; set; } = string.Empty;
+        [Column(TypeName = "LONGTEXT")]
         public string? ScreenshotBase64 { get; set; }
 
         public User? User { get; set; }
