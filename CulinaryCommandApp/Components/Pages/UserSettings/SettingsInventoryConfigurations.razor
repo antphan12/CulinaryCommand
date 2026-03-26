@@ -11,7 +11,7 @@
 
 <div class="tab-pane active">
     <h4 class="mb-4">
-        <i class="bi bi-rulers me-2"></i>Inventory Configurations
+        Inventory Configurations
     </h4>
 
     @if (!_ready)
@@ -194,18 +194,21 @@
     {
         _ctx = await UserCtx.GetAsync();
 
-        if (_ctx.IsAuthenticated != true || _ctx.User is null)
+        if (_ctx.IsAuthenticated != true)
         {
             Nav.NavigateTo("/login", true);
             return;
         }
 
-        var role = _ctx.User.Role ?? string.Empty;
-        _allowed = role.Equals("Admin", StringComparison.OrdinalIgnoreCase)
-                || role.Equals("Manager", StringComparison.OrdinalIgnoreCase);
+        if (_ctx.User is not null)
+        {
+            var role = _ctx.User.Role ?? string.Empty;
+            _allowed = role.Equals("Admin", StringComparison.OrdinalIgnoreCase)
+                    || role.Equals("Manager", StringComparison.OrdinalIgnoreCase);
 
-        if (_allowed)
-            _units = await UnitService.GetAllAsync();
+            if (_allowed)
+                _units = await UnitService.GetAllAsync();
+        }
 
         _ready = true;
     }
