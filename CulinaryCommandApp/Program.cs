@@ -29,13 +29,14 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddBlazorBootstrap();
+
 //
 // =====================
 // UI
 // =====================
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddBlazorBootstrap();
 //
 // =====================
 // Cognito Authentication (MUST be before Build)
