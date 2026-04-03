@@ -88,6 +88,7 @@
                     <th>Unit</th>
                     <th @onclick='() => SortBy("price")'>Cost/Unit <i class="bi bi-arrow-down-up"></i></th>
                     <th @onclick='() => SortBy("supplier")'>Supplier <i class="bi bi-arrow-down-up"></i></th>
+                    <th>Location</th>
                     <th>Notes</th>
                     <th class="actions-col">Actions</th>
                 </tr>
@@ -131,7 +132,8 @@
                             <td>@item.Unit</td>
                             <td>$@item.Price.ToString("F2")</td>
                             <td>@(item.VendorName ?? "—")</td>
-                            <td>@(string.IsNullOrWhiteSpace(item.Notes) ? "-" : item.Notes)</td>
+                            <td>@(item.StorageLocationName ?? "—")</td>
+                            <td>@(string.IsNullOrWhiteSpace(item.Notes) ? "—" : item.Notes)</td>
                             <td class="actions-col">
                                 <div class="action-buttons">
                                     <button class="btn-action" @onclick="() => EditItem(item)" title="Edit">
