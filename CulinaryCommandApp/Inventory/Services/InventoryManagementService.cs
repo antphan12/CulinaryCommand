@@ -133,7 +133,12 @@ namespace CulinaryCommandApp.Inventory.Services
 
         public async Task<InventoryItemDTO?> UpdateItemAsync(InventoryItemDTO dto)
         {
-            var entity = await _db.Ingredients.FindAsync(dto.Id);
+            // var entity = await _db.Ingredients.FindAsync(dto.Id);
+            var entity = await _db.Ingredients
+                .Include(i => i.Unit)
+                .Include(i => i.StorageLocation)
+                .Include(i => i.Vendor)
+                .FirstOrDefaultAsync(i => i.Id == dto.Id);
             if (entity == null)
                 return null;
 

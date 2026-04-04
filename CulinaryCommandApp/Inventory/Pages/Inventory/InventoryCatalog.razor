@@ -560,10 +560,6 @@ i.VendorName).ToList(),
 
     private void EditItem(InventoryItemDTO item)
     {
-        // Temporary debug check
-        var matchedUnit = _units.FirstOrDefault(u => u.Id == item.UnitId);
-        Console.WriteLine($"EditItem: UnitId={item.UnitId}, matched={matchedUnit?.Name ?? "NOT FOUND"}");
-    
         editingItem = item;
         modalItem = new CreateIngredientDTO
         {
@@ -596,7 +592,7 @@ i.VendorName).ToList(),
             {
                 await InventoryService.AddItemAsync(modalItem);
             }
-            else
+            @* else
             {
                 var dto = new InventoryItemDTO
                 {
@@ -609,6 +605,32 @@ i.VendorName).ToList(),
                     ReorderLevel = modalItem.ReorderLevel,
                     UnitId = modalItem.UnitId,
                     VendorId = modalItem.VendorId,
+                };
+                await InventoryService.UpdateItemAsync(dto);
+            } *@
+            else
+            {
+                // Resolve StorageLocationName -> StorageLocationId
+                int? storageLocId = null;
+                if (!string.IsNullOrWhiteSpace(modalItem.StorageLocationName))
+                {
+                    var allLocs = await StorageLocService.GetByLocationAsync(LocationState.CurrentLocation?.Id ?? 0);
+                    storageLocId = allLocs?.FirstOrDefault(l => 
+                        string.Equals(l.Name, modalItem.StorageLocationName, StringComparison.OrdinalIgnoreCase))?.Id;
+                }
+
+                var dto = new InventoryItemDTO
+                {
+                    Id = editingItem.Id,
+                    Name = modalItem.Name,
+                    SKU = modalItem.SKU ?? "",
+                    Category = modalItem.Category ?? "",
+                    Price = modalItem.Price,
+                    CurrentQuantity = modalItem.CurrentQuantity,
+                    ReorderLevel = modalItem.ReorderLevel,
+                    UnitId = modalItem.UnitId,
+                    VendorId = modalItem.VendorId,
+                    StorageLocationId = storageLocId,  // ← add this
                 };
                 await InventoryService.UpdateItemAsync(dto);
             }
