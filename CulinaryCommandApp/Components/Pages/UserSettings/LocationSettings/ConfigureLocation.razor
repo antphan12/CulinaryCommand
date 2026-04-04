@@ -16,6 +16,7 @@
 @inject IVendorService VendorService
 @inject ILocationService LocationService
 @inject IUnitService UnitService
+@inject StorageLocationService StorageLocService
 @inject IUserContextService UserCtx
 @inject NavigationManager Nav
 @inject IConfiguration Config
@@ -47,7 +48,7 @@
                 <i class="bi bi-arrow-left me-1"></i>Back
             </a>
             <div>
-                <h3 class="mb-0">Configure Restaurant</h3>
+                <h3 class="mb-0">Configure Location</h3>
                 <span class="text-muted fs-6">@_location.Name · @_location.City, @_location.State</span>
             </div>
         </div>
@@ -188,6 +189,63 @@
             {
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <span class="text-muted align-self-center small">@_locationUnits.Count unit(s) at this location</span>
+                </div>
+            }
+        </div>
+
+        <!-- Storage Location Section -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Measurement Units</h5>
+                <button class="btn btn-success btn-sm" @onclick="OpenAddUnitModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Storage Location
+                </button>
+            </div>
+
+            <div class="card-body p-0">
+                @if (_storageLocations.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                        No storage locations assigned to this location yet. Add one to get started.
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Abbreviation</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var location in _storageLocations)
+                            {
+                                <tr>
+                                    <td><strong>@unit.Name</strong></td>
+                                    <td><span class="badge bg-secondary">@unit.Abbreviation</span></td>
+                                    <td class="text-end">
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                @onclick="() => RemoveUnit(unit.Id)"
+                                                title="Remove unit from this location">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            
+
+            @if (_storageLocations.Any())
+            {
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <span class="text-muted align-self-center small">@_storageLocations.Count unit(s) at this location</span>
                 </div>
             }
         </div>
@@ -366,6 +424,10 @@
     </div>
 }
 
+@if (_showAddStorageLocationModal) {
+
+}
+
 @code {
     [Parameter] public int LocationId { get; set; }
 
@@ -373,12 +435,15 @@
     private List<Vendor> _locationVendors = new();
     private List<Unit> _locationUnits = new();
     private List<Unit> _availableUnitsToAdd = new();
+    private List<StorageLocation> _storageLocations = new();
 
     private bool _hydrated;
     private bool _showAddVendorModal;
     private bool _creatingVendor;
     private bool _showAddUnitModal;
     private bool _addingUnit;
+    private bool _showAddStorageLocationModal;
+    private bool _addingStorageLocation;
     private int _selectedUnitId;
 
     private Vendor _newVendor = new();
@@ -424,6 +489,7 @@
         {
             _locationVendors = await VendorService.GetVendorsByLocationAsync(LocationId);
             _locationUnits   = await UnitService.GetByLocationAsync(LocationId);
+            _storageLocations = await StorageLocService.GetByLocationAsync(LocationId);
         }
 
         _hydrated = true;
