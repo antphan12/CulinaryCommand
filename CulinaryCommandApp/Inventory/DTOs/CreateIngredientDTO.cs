@@ -17,5 +17,6 @@ namespace CulinaryCommandApp.Inventory.DTOs
         public int LocationId { get; set; }
         public int? VendorId { get; set; }
         public int? StorageLocationId { get; set; }
+        public string? StorageLocationName { get; set; }
     }
 }

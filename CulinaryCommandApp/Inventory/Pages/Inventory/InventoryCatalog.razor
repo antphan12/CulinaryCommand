@@ -13,6 +13,7 @@
 @inject IUnitService UnitService
 @inject LocationState LocationState
 @inject EnumService EnumService
+@inject StorageLocationService StorageLocService
 @inject IUserContextService UserCtx
 @inject NavigationManager Nav
 
@@ -29,151 +30,155 @@
     }
     else
     {
-    <div class="inventory-header">
-        <div class="header-text">
-            <h1>Inventory Catalog</h1>
-            <p>@(LocationState.CurrentLocation is not null ? $"{LocationState.CurrentLocation.Name} — ingredient catalog" : "Manage your ingredient catalog")</p>
-        </div>
-    </div>
-
-    @if (LocationState.CurrentLocation is null)
-    {
-        <div class="alert alert-info d-flex align-items-center gap-2 mt-3" role="alert">
-            <i class="bi bi-geo-alt-fill"></i>
-            <span>No location selected. Please choose a location to view its inventory catalog.</span>
-        </div>
-    }
-    else
-    {
-
-    <div class="inventory-toolbar">
-        <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Search catalog by name, category, or supplier..." @bind="SearchTerm" @bind:event="oninput" />
-        </div>
-        <div class="toolbar-actions">
-            <button class="icon-btn" @onclick="RefreshCatalog" title="Refresh">
-                <i class="bi bi-arrow-clockwise"></i>
-            </button>
-            <div class="select-wrap">
-                <select class="form-select" @bind="SelectedCategory">
-                    <option value="">All Categories</option>
-                    @foreach (var category in categories)
-                    {
-                        <option value="@category">@category</option>
-                    }
-                </select>
+        <div class="inventory-header">
+            <div class="header-text">
+                <h1>Inventory Catalog</h1>
+                <p>@(LocationState.CurrentLocation is not null ? $"{LocationState.CurrentLocation.Name} — ingredient catalog" : "Manage your ingredient catalog")</p>
             </div>
-            <button class="btn-add" @onclick="ShowAddItemModal">
-                <i class="bi bi-plus-lg"></i> Add Item
-            </button>
         </div>
-    </div>
 
-    <div class="tab-row">
-        <button class="tab-btn active">
-            All Items (@filteredItems.Count)
-        </button>
-    </div>
+        @if (LocationState.CurrentLocation is null)
+        {
+            <div class="alert alert-info d-flex align-items-center gap-2 mt-3" role="alert">
+                <i class="bi bi-geo-alt-fill"></i>
+                <span>No location selected. Please choose a location to view its inventory catalog.</span>
+            </div>
+        }
+        else
+        {
 
-    <div class="inventory-table-container">
-        <table class="inventory-table">
-            <thead>
-                <tr>
-                    <th class="checkbox-col">
-                        <input type="checkbox" checked="@IsPageSelected" @onchange="ToggleSelectAll" />
-                    </th>
-                    <th @onclick='() => SortBy("name")'>Item Name <i class="bi bi-arrow-down-up"></i></th>
-                    <th>Category</th>
-                    <th>Unit</th>
-                    <th @onclick='() => SortBy("price")'>Cost/Unit <i class="bi bi-arrow-down-up"></i></th>
-                    <th @onclick='() => SortBy("supplier")'>Supplier <i class="bi bi-arrow-down-up"></i></th>
-                    <th>Location</th>
-                    <th>Notes</th>
-                    <th class="actions-col">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (isLoading)
-                {
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                else if (!pagedItems.Any())
-                {
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <p class="text-muted">No items found</p>
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var item in pagedItems)
-                    {
+            <div class="inventory-toolbar">
+                <div class="search-bar">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search catalog by name, category, or supplier..." @bind="SearchTerm"
+                           @bind:event="oninput" />
+                </div>
+                <div class="toolbar-actions">
+                    <button class="icon-btn" @onclick="RefreshCatalog" title="Refresh">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <div class="select-wrap">
+                        <select class="form-select" @bind="SelectedCategory">
+                            <option value="">All Categories</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+                    <button class="btn-add" @onclick="ShowAddItemModal">
+                        <i class="bi bi-plus-lg"></i> Add Item
+                    </button>
+                </div>
+            </div>
+
+            <div class="tab-row">
+                <button class="tab-btn active">
+                    All Items (@filteredItems.Count)
+                </button>
+            </div>
+
+            <div class="inventory-table-container">
+                <table class="inventory-table">
+                    <thead>
                         <tr>
-                            <td class="checkbox-col">
-                                <input type="checkbox" checked="@selectedIds.Contains(item.Id)" @onchange="(e) => ToggleSelection(item.Id, e)" />
-                            </td>
-                            <td>
-                                <div class="name-cell">
-                                    <div class="item-name">@item.Name</div>
-                                    <div class="item-sku">SKU: @item.SKU</div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="category-pill @GetCategoryClass(item.Category)">@item.Category</span>
-                            </td>
-                            <td>@item.Unit</td>
-                            <td>$@item.Price.ToString("F2")</td>
-                            <td>@(item.VendorName ?? "—")</td>
-                            <td>@(item.StorageLocationName ?? "—")</td>
-                            <td>@(string.IsNullOrWhiteSpace(item.Notes) ? "—" : item.Notes)</td>
-                            <td class="actions-col">
-                                <div class="action-buttons">
-                                    <button class="btn-action" @onclick="() => EditItem(item)" title="Edit">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn-action delete" @onclick="() => DeleteItem(item)" title="Delete">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
+                            <th class="checkbox-col">
+                                <input type="checkbox" checked="@IsPageSelected" @onchange="ToggleSelectAll" />
+                            </th>
+                            <th @onclick='() => SortBy("name")'>Item Name <i class="bi bi-arrow-down-up"></i></th>
+                            <th>Category</th>
+                            <th>Unit</th>
+                            <th @onclick='() => SortBy("price")'>Cost/Unit <i class="bi bi-arrow-down-up"></i></th>
+                            <th @onclick='() => SortBy("supplier")'>Supplier <i class="bi bi-arrow-down-up"></i></th>
+                            <th>Location</th>
+                            <th>Notes</th>
+                            <th class="actions-col">Actions</th>
                         </tr>
-                    }
-                }
-            </tbody>
-        </table>
-        <div class="table-footer">
-            <div class="footer-count">Showing @GetStartIndex()-@GetEndIndex() of @filteredItems.Count Items</div>
-            <div class="pagination">
-                <button class="page-nav" @onclick="PreviousPage" disabled="@(currentPage <= 1)">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                @foreach (var pageNum in pageButtons)
-                {
-                    if (pageNum < 0)
-                    {
-                        <span class="page-ellipsis">...</span>
-                    }
-                    else
-                    {
-                        <button class="page-btn @(currentPage == pageNum ? "active" : "")" @onclick="() => GoToPage(pageNum)">@pageNum</button>
-                    }
-                }
-                <button class="page-nav" @onclick="NextPage" disabled="@(currentPage >= totalPages)">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
+                    </thead>
+                    <tbody>
+                        @if (isLoading)
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else if (!pagedItems.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <p class="text-muted">No items found</p>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in pagedItems)
+                            {
+                                <tr>
+                                    <td class="checkbox-col">
+                                        <input type="checkbox" checked="@selectedIds.Contains(item.Id)"
+                                               @onchange="(e) => ToggleSelection(item.Id, e)" />
+                                    </td>
+                                    <td>
+                                        <div class="name-cell">
+                                            <div class="item-name">@item.Name</div>
+                                            <div class="item-sku">SKU: @item.SKU</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="category-pill @GetCategoryClass(item.Category)">@item.Category</span>
+                                    </td>
+                                    <td>@item.Unit</td>
+                                    <td>$@item.Price.ToString("F2")</td>
+                                    <td>@(item.VendorName ?? "—")</td>
+                                    <td>@(item.StorageLocationName ?? "—")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(item.Notes) ? "—" : item.Notes)</td>
+                                    <td class="actions-col">
+                                        <div class="action-buttons">
+                                            <button class="btn-action" @onclick="() => EditItem(item)" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn-action delete" @onclick="() => DeleteItem(item)" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <div class="footer-count">Showing @GetStartIndex()-@GetEndIndex() of @filteredItems.Count Items</div>
+                    <div class="pagination">
+                        <button class="page-nav" @onclick="PreviousPage" disabled="@(currentPage <= 1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        @foreach (var pageNum in pageButtons)
+                        {
+                            if (pageNum < 0)
+                            {
+                                <span class="page-ellipsis">...</span>
+                            }
+                            else
+                            {
+                                <button class="page-btn @(currentPage == pageNum ? "active" : "")"
+                                        @onclick="() => GoToPage(pageNum)">@pageNum</button>
+                            }
+                        }
+                        <button class="page-nav" @onclick="NextPage" disabled="@(currentPage >= totalPages)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    } @* end @if (LocationState.CurrentLocation is not null) *@
+        }
+        @* end @if (LocationState.CurrentLocation is not null) *@
 
     } @* end else (_allowed) *@
 
@@ -200,15 +205,31 @@
                     <label>SKU</label>
                     <input type="text" class="form-control" @bind="modalItem.SKU" />
                 </div>
-                <div class="form-group mb-3">
-                    <label>Category</label>
-                    <select class="form-control" @bind="modalItem.Category">
-                        <option value="">Select Category</option>
-                        @foreach (var category in categories)
-                        {
-                            <option value="@category">@category</option>
-                        }
-                    </select>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label>Category</label>
+                            <select class="form-control" @bind="modalItem.Category">
+                                <option value="">Select Category</option>
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category">@category</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label>Location</label>
+                            <select class="form-control" @bind="modalItem.StorageLocationName">
+                                <option value="">Select Location</option>
+                                @foreach (var location in storageLocations)
+                                {
+                                    <option value="@location">@location</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
@@ -265,6 +286,7 @@
     private List<int> pageButtons = new();
     private HashSet<int> selectedIds = new();
     private List<string> categories = new();
+    private List<string> storageLocations = new();
 
     private bool showModal = false;
     private bool _saving = false;
@@ -304,12 +326,15 @@
 
     private void OnLocationChanged()
     {
-        _ = InvokeAsync(async () => {
-            try {
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
                 await LoadCatalogData();
                 StateHasChanged();
             }
-            catch (Exception){
+            catch (Exception)
+            {
                 // add some logging later
             }
         });
@@ -331,6 +356,7 @@
         {
             itemCatalog = new();
             categories = EnumService.GetCategories();
+            storageLocations = new List<string>();
             _units = await UnitService.GetAllAsync();
             FilterItems();
             isLoading = false;
@@ -350,6 +376,9 @@
         _units = await UnitService.GetByLocationAsync(locId.Value);
         if (!_units.Any())
             _units = await UnitService.GetAllAsync();
+
+        var storageLocs = await StorageLocService.GetByLocationAsync(locId.Value);
+        storageLocations = storageLocs?.Select(sl => sl.Name ?? string.Empty).ToList() ?? new List<string>();
 
         FilterItems();
         isLoading = false;
@@ -392,9 +421,12 @@
     {
         filteredItems = sortColumn switch
         {
-            "name" => sortAscending ? filteredItems.OrderBy(i => i.Name).ToList() : filteredItems.OrderByDescending(i => i.Name).ToList(),
-            "price" => sortAscending ? filteredItems.OrderBy(i => i.Price).ToList() : filteredItems.OrderByDescending(i => i.Price).ToList(),
-            "supplier" => sortAscending ? filteredItems.OrderBy(i => i.VendorName).ToList() : filteredItems.OrderByDescending(i => i.VendorName).ToList(),
+            "name" => sortAscending ? filteredItems.OrderBy(i => i.Name).ToList() : filteredItems.OrderByDescending(i =>
+i.Name).ToList(),
+            "price" => sortAscending ? filteredItems.OrderBy(i => i.Price).ToList() : filteredItems.OrderByDescending(i =>
+i.Price).ToList(),
+            "supplier" => sortAscending ? filteredItems.OrderBy(i => i.VendorName).ToList() : filteredItems.OrderByDescending(i =>
+i.VendorName).ToList(),
             _ => filteredItems
         };
     }
@@ -484,6 +516,7 @@
             CurrentQuantity = item.CurrentQuantity,
             ReorderLevel = item.ReorderLevel,
             LocationId = LocationState.CurrentLocation?.Id ?? 0,
+            StorageLocationName = item.StorageLocationName,
             UnitId = item.UnitId,
             VendorId = item.VendorId
         };
