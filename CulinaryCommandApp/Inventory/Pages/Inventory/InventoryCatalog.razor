@@ -365,6 +365,10 @@
 
         itemCatalog = await InventoryService.GetItemsByLocationAsync(locId.Value);
 
+         // Debug: check if UnitId is being returned
+        foreach (var i in itemCatalog.Take(3))
+        Console.WriteLine($"Catalog item: {i.Name}, UnitId={i.UnitId}, Unit={i.Unit}");
+
         // Always start from the preset list so the modal always has options.
         // Merge in any DB-side categories not in the preset (e.g. legacy or custom data).
         var dbCategories = await InventoryService.GetCategoriesByLocationAsync(locId.Value);
@@ -373,9 +377,19 @@
             .OrderBy(c => c)
             .ToList();
 
-        _units = await UnitService.GetByLocationAsync(locId.Value);
+        @* _units = await UnitService.GetByLocationAsync(locId.Value);
         if (!_units.Any())
-            _units = await UnitService.GetAllAsync();
+            _units = await UnitService.GetAllAsync(); *@
+        var locationUnits = await UnitService.GetByLocationAsync(locId.Value);
+        @* _units = locationUnits.Any()
+            ? locationUnits.Union(await UnitService.GetAllAsync()).ToList()
+            : await UnitService.GetAllAsync(); *@
+        var allUnits = await UnitService.GetAllAsync();
+        _units = locationUnits
+            .Union(allUnits)
+            .DistinctBy(u => u.Id)  // requires .NET 6+
+            .OrderBy(u => u.Name)
+            .ToList();
 
         var storageLocs = await StorageLocService.GetByLocationAsync(locId.Value);
         storageLocations = storageLocs?.Select(sl => sl.Name ?? string.Empty).ToList() ?? new List<string>();
@@ -506,6 +520,10 @@ i.VendorName).ToList(),
 
     private void EditItem(InventoryItemDTO item)
     {
+        // Temporary debug check
+        var matchedUnit = _units.FirstOrDefault(u => u.Id == item.UnitId);
+        Console.WriteLine($"EditItem: UnitId={item.UnitId}, matched={matchedUnit?.Name ?? "NOT FOUND"}");
+    
         editingItem = item;
         modalItem = new CreateIngredientDTO
         {
@@ -525,6 +543,12 @@ i.VendorName).ToList(),
 
     private async Task SaveItem()
     {
+        if (modalItem.UnitId == 0)
+        {
+            @* _saveError = "Please select a unit."; *@
+            return;
+        }
+
         _saving = true;
         try
         {
