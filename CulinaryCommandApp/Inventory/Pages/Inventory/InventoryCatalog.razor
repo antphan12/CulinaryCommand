@@ -184,6 +184,34 @@
 
 </div>
 
+@if (showStorageLocationModal)
+{
+    <div class="modal-backdrop" @onclick="CloseStorageLocationModal"></div>
+    <div class="modal-dialog-custom">
+        <div class="modal-content-custom">
+            <div class="modal-header-custom">
+                <h3>Add Storage Location</h3>
+                <button class="btn-close-custom" @onclick="CloseStorageLocationModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body-custom">
+                <div class="form-group mb-3">
+                    <label>Location Name</label>
+                    <input type="text" class="form-control" @bind="newStorageLocationName" 
+                           placeholder="e.g. Walk-in Freezer, Dry Storage..." />
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button class="btn btn-secondary" @onclick="CloseStorageLocationModal">Cancel</button>
+                <button class="btn btn-success" @onclick="SaveStorageLocation" disabled="@_savingStorageLocation">
+                    @(_savingStorageLocation ? "Saving..." : "Add Location")
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Add/Edit Item Modal -->
 @if (showModal)
 {
@@ -218,7 +246,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    @* <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label>Location</label>
                             <select class="form-control" @bind="modalItem.StorageLocationName">
@@ -228,6 +256,24 @@
                                     <option value="@location">@location</option>
                                 }
                             </select>
+                        </div>
+                    </div> *@
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label>Location</label>
+                            <div class="d-flex gap-2">
+                                <select class="form-control" @bind="modalItem.StorageLocationName">
+                                    <option value="">Select Location</option>
+                                    @foreach (var location in storageLocations)
+                                    {
+                                        <option value="@location">@location</option>
+                                    }
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" 
+                                        @onclick="OpenStorageLocationModal" title="Add new location">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -289,6 +335,9 @@
     private List<string> storageLocations = new();
 
     private bool showModal = false;
+    private bool showStorageLocationModal = false;
+    private string newStorageLocationName = "";
+    private bool _savingStorageLocation = false;
     private bool _saving = false;
     private bool _ready = false;
     private bool _allowed = false;
@@ -365,10 +414,6 @@
 
         itemCatalog = await InventoryService.GetItemsByLocationAsync(locId.Value);
 
-         // Debug: check if UnitId is being returned
-        foreach (var i in itemCatalog.Take(3))
-        Console.WriteLine($"Catalog item: {i.Name}, UnitId={i.UnitId}, Unit={i.Unit}");
-
         // Always start from the preset list so the modal always has options.
         // Merge in any DB-side categories not in the preset (e.g. legacy or custom data).
         var dbCategories = await InventoryService.GetCategoriesByLocationAsync(locId.Value);
@@ -377,13 +422,8 @@
             .OrderBy(c => c)
             .ToList();
 
-        @* _units = await UnitService.GetByLocationAsync(locId.Value);
-        if (!_units.Any())
-            _units = await UnitService.GetAllAsync(); *@
         var locationUnits = await UnitService.GetByLocationAsync(locId.Value);
-        @* _units = locationUnits.Any()
-            ? locationUnits.Union(await UnitService.GetAllAsync()).ToList()
-            : await UnitService.GetAllAsync(); *@
+
         var allUnits = await UnitService.GetAllAsync();
         _units = locationUnits
             .Union(allUnits)
@@ -613,5 +653,52 @@ i.VendorName).ToList(),
     {
         get => selectedCategory;
         set { selectedCategory = value; FilterItems(); }
+    }
+
+    private void OpenStorageLocationModal()
+    {
+        showModal = false;
+        newStorageLocationName = "";
+        showStorageLocationModal = true;
+    }
+
+    private void CloseStorageLocationModal()
+    {
+        showStorageLocationModal = false;
+        newStorageLocationName = "";
+        showModal = true;
+    }
+
+    private async Task SaveStorageLocation()
+    {
+        if (string.IsNullOrWhiteSpace(newStorageLocationName))
+            return;
+
+        _savingStorageLocation = true;
+        try
+        {
+            var locId = LocationState.CurrentLocation?.Id ?? 0;
+            var entity = new StorageLocation
+            {
+                Name = newStorageLocationName.Trim(),
+                LocationId = locId
+            };
+            await StorageLocService.AddAsync(entity);
+
+            // Refresh the list and auto-select the new location
+            var storageLocs = await StorageLocService.GetByLocationAsync(locId);
+            storageLocations = storageLocs?.Select(sl => sl.Name ?? string.Empty).ToList() ?? new();
+            modalItem.StorageLocationName = newStorageLocationName.Trim();
+
+            CloseStorageLocationModal();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to add storage location: {ex}");
+        }
+        finally
+        {
+            _savingStorageLocation = false;
+        }
     }
 }
