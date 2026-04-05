@@ -47,5 +47,10 @@ namespace CulinaryCommandApp.Inventory.Services
             _db.StorageLocations.Remove(entity);
             return await _db.SaveChangesAsync() > 0;
         }
+
+        public async Task<bool> IsInUseAsync(int id)
+        {
+            return await _db.Ingredients.AnyAsync(i => i.StorageLocationId == id);
+        }
     }
 }
