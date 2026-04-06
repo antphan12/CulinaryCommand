@@ -16,5 +16,7 @@ namespace CulinaryCommandApp.Inventory.DTOs
         [Range(1, int.MaxValue, ErrorMessage = "LocationId must be a positive integer.")]
         public int LocationId { get; set; }
         public int? VendorId { get; set; }
+        public int? StorageLocationId { get; set; }
+        public string? StorageLocationName { get; set; }
     }
 }

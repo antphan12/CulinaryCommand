@@ -63,3 +63,5 @@ appsettings.Development.json
 
 scripts/.env
 scripts/.venv
+
+ryan.migrations 

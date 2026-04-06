@@ -13,6 +13,7 @@
 @inject IUnitService UnitService
 @inject LocationState LocationState
 @inject EnumService EnumService
+@inject StorageLocationService StorageLocService
 @inject IUserContextService UserCtx
 @inject NavigationManager Nav
 @inject IJSRuntime JS
@@ -30,164 +31,196 @@
     }
     else
     {
-    <div class="inventory-header">
-        <div class="header-text">
-            <h1>Inventory Catalog</h1>
-            <p>@(LocationState.CurrentLocation is not null ? $"{LocationState.CurrentLocation.Name}" : "Manage your ingredient catalog")</p>
-        </div>
-    </div>
-
-    @if (LocationState.CurrentLocation is null)
-    {
-        <div class="alert alert-info d-flex align-items-center gap-2 mt-3" role="alert">
-            <i class="bi bi-geo-alt-fill"></i>
-            <span>No location selected. Please choose a location to view its inventory catalog.</span>
-        </div>
-    }
-    else
-    {
-
-    <div class="inventory-toolbar">
-        <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" placeholder="Search catalog by name, category, or supplier..." @bind="SearchTerm" @bind:event="oninput" />
-        </div>
-        <div class="toolbar-actions">
-            <button class="icon-btn" @onclick="RefreshCatalog" title="Refresh">
-                <i class="bi bi-arrow-clockwise"></i>
-            </button>
-            <div class="select-wrap">
-                <select class="form-select" @bind="SelectedCategory">
-                    <option value="">All Categories</option>
-                    @foreach (var category in categories)
-                    {
-                        <option value="@category">@category</option>
-                    }
-                </select>
+        <div class="inventory-header">
+            <div class="header-text">
+                <h1>Inventory Catalog</h1>
+                <p>@(LocationState.CurrentLocation is not null ? $"{LocationState.CurrentLocation.Name} — ingredient catalog" : "Manage your ingredient catalog")</p>
             </div>
-            <button class="btn-add" @onclick="ShowAddItemModal">
-                <i class="bi bi-plus-lg"></i> Add Item
-            </button>
         </div>
-    </div>
 
-    <div class="tab-row">
-        <button class="tab-btn active">
-            All Items (@filteredItems.Count)
-        </button>
-    </div>
+        @if (LocationState.CurrentLocation is null)
+        {
+            <div class="alert alert-info d-flex align-items-center gap-2 mt-3" role="alert">
+                <i class="bi bi-geo-alt-fill"></i>
+                <span>No location selected. Please choose a location to view its inventory catalog.</span>
+            </div>
+        }
+        else
+        {
+            <div class="inventory-toolbar">
+                <div class="search-bar">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search catalog by name, category, or supplier..." @bind="SearchTerm"
+                           @bind:event="oninput" />
+                </div>
+                <div class="toolbar-actions">
+                    <button class="icon-btn" @onclick="RefreshCatalog" title="Refresh">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <div class="select-wrap">
+                        <select class="form-select" @bind="SelectedCategory">
+                            <option value="">All Categories</option>
+                            @foreach (var category in categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+                    <button class="btn-add" @onclick="ShowAddItemModal">
+                        <i class="bi bi-plus-lg"></i> Add Item
+                    </button>
+                </div>
+            </div>
 
-    <div class="inventory-table-container">
-        <table class="inventory-table">
-            <thead>
-                <tr>
-                    <th class="checkbox-col">
-                        <input type="checkbox" checked="@IsPageSelected" @onchange="ToggleSelectAll" />
-                    </th>
-                    <th @onclick='() => SortBy("name")'>Item Name <i class="bi bi-arrow-down-up"></i></th>
-                    <th>Category</th>
-                    <th class="unit-col">Unit</th>
-                    <th @onclick='() => SortBy("supplier")'>Supplier <i class="bi bi-arrow-down-up"></i></th>
-                    <th>Notes</th>
-                    <th class="ellipsis-col"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (isLoading)
-                {
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                else if (!pagedItems.Any())
-                {
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <p class="text-muted">No items found</p>
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var item in pagedItems)
-                    {
-                        <tr class="data-row">
-                            <td class="checkbox-col">
-                                <input type="checkbox" checked="@selectedIds.Contains(item.Id)" @onchange="(e) => ToggleSelection(item.Id, e)" />
-                            </td>
-                            <td>
-                                <div class="name-cell">
-                                    <div class="item-name">@item.Name</div>
-                                    <div class="item-sku">SKU: @item.SKU</div>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="category-pill @GetCategoryClass(item.Category)">@item.Category</span>
-                            </td>
-                            <td class="unit-col"><span class="unit-badge">@item.Unit</span></td>
-                            <td>@(item.VendorName ?? "—")</td>
-                            <td>@(string.IsNullOrWhiteSpace(item.Notes) ? "-" : item.Notes)</td>
-                            <td class="ellipsis-col">
-                                <button class="ellipsis-btn" @onclick="(e) => ToggleMenu(item.Id, e)" @onclick:stopPropagation="true">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-                            </td>
+            <div class="tab-row">
+                <button class="tab-btn active">
+                    All Items (@filteredItems.Count)
+                </button>
+            </div>
+
+            <div class="inventory-table-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col">
+                                <input type="checkbox" checked="@IsPageSelected" @onchange="ToggleSelectAll" />
+                            </th>
+                            <th @onclick='() => SortBy("name")'>Item Name <i class="bi bi-arrow-down-up"></i></th>
+                            <th>Category</th>
+                            <th class="unit-col">Unit</th>
+                            <th @onclick='() => SortBy("supplier")'>Supplier <i class="bi bi-arrow-down-up"></i></th>
+                            <th>Location</th>
+                            <th>Notes</th>
+                            <th class="ellipsis-col"></th>
                         </tr>
-                    }
-                }
-            </tbody>
-        </table>
-        <div class="table-footer">
-            <div class="footer-count">Showing @GetStartIndex()-@GetEndIndex() of @filteredItems.Count Items</div>
-            <div class="pagination">
-                <button class="page-nav" @onclick="PreviousPage" disabled="@(currentPage <= 1)">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                @foreach (var pageNum in pageButtons)
-                {
-                    if (pageNum < 0)
-                    {
-                        <span class="page-ellipsis">...</span>
-                    }
-                    else
-                    {
-                        <button class="page-btn @(currentPage == pageNum ? "active" : "")" @onclick="() => GoToPage(pageNum)">@pageNum</button>
-                    }
-                }
-                <button class="page-nav" @onclick="NextPage" disabled="@(currentPage >= totalPages)">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
+                    </thead>
+                    <tbody>
+                        @if (isLoading)
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else if (!pagedItems.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <p class="text-muted">No items found</p>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in pagedItems)
+                            {
+                                <tr class="data-row">
+                                    <td class="checkbox-col">
+                                        <input type="checkbox" checked="@selectedIds.Contains(item.Id)"
+                                               @onchange="(e) => ToggleSelection(item.Id, e)" />
+                                    </td>
+                                    <td>
+                                        <div class="name-cell">
+                                            <div class="item-name">@item.Name</div>
+                                            <div class="item-sku">SKU: @item.SKU</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="category-pill @GetCategoryClass(item.Category)">@item.Category</span>
+                                    </td>
+                                    <td class="unit-col"><span class="unit-badge">@item.Unit</span></td>
+                                    <td>@(item.VendorName ?? "—")</td>
+                                    <td>@(item.StorageLocationName ?? "—")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(item.Notes) ? "-" : item.Notes)</td>
+                                    <td class="ellipsis-col">
+                                        <button class="ellipsis-btn" @onclick="(e) => ToggleMenu(item.Id, e)" @onclick:stopPropagation="true">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                <div class="table-footer">
+                    <div class="footer-count">Showing @GetStartIndex()-@GetEndIndex() of @filteredItems.Count Items</div>
+                    <div class="pagination">
+                        <button class="page-nav" @onclick="PreviousPage" disabled="@(currentPage <= 1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        @foreach (var pageNum in pageButtons)
+                        {
+                            if (pageNum < 0)
+                            {
+                                <span class="page-ellipsis">...</span>
+                            }
+                            else
+                            {
+                                <button class="page-btn @(currentPage == pageNum ? "active" : "")"
+                                        @onclick="() => GoToPage(pageNum)">@pageNum</button>
+                            }
+                        }
+                        <button class="page-nav" @onclick="NextPage" disabled="@(currentPage >= totalPages)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    @if (_openMenuId is not null)
-    {
-        <div class="row-menu-backdrop" @onclick="CloseMenu"></div>
-        <div class="row-menu-dialog" style="top: @(_menuY)px; left: @(_menuX)px;">
-            @{ var _menuItem = pagedItems.FirstOrDefault(i => i.Id == _openMenuId); }
-            @if (_menuItem is not null)
+            @if (_openMenuId is not null)
             {
-                <div class="row-menu-label">@_menuItem.Name</div>
-                <button class="row-menu-action" @onclick="() => { EditItem(_menuItem); CloseMenu(); }">
-                    <i class="bi bi-pencil-square"></i> Edit Item
-                </button>
-                <button class="row-menu-action delete" @onclick="() => { _ = DeleteItem(_menuItem); CloseMenu(); }">
-                    <i class="bi bi-trash3"></i> Delete Item
-                </button>
+                <div class="row-menu-backdrop" @onclick="CloseMenu"></div>
+                <div class="row-menu-dialog" style="top: @(_menuY)px; left: @(_menuX)px;">
+                    @{ var _menuItem = pagedItems.FirstOrDefault(i => i.Id == _openMenuId); }
+                    @if (_menuItem is not null)
+                    {
+                        <div class="row-menu-label">@_menuItem.Name</div>
+                        <button class="row-menu-action" @onclick="() => { EditItem(_menuItem); CloseMenu(); }">
+                            <i class="bi bi-pencil-square"></i> Edit Item
+                        </button>
+                        <button class="row-menu-action delete" @onclick="() => { _ = DeleteItem(_menuItem); CloseMenu(); }">
+                            <i class="bi bi-trash3"></i> Delete Item
+                        </button>
+                    }
+                </div>
             }
-        </div>
-    }
 
-    } @* end @if (LocationState.CurrentLocation is not null) *@
+        } @* end @if (LocationState.CurrentLocation is not null) *@
 
     } @* end else (_allowed) *@
 
 </div>
+
+@if (showStorageLocationModal)
+{
+    <div class="modal-backdrop" @onclick="CloseStorageLocationModal"></div>
+    <div class="modal-dialog-custom">
+        <div class="modal-content-custom">
+            <div class="modal-header-custom">
+                <h3>Add Storage Location</h3>
+                <button class="btn-close-custom" @onclick="CloseStorageLocationModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body-custom">
+                <div class="form-group mb-3">
+                    <label>Location Name</label>
+                    <input type="text" class="form-control" @bind="newStorageLocationName" 
+                           placeholder="e.g. Walk-in Freezer, Dry Storage..." />
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button class="btn btn-secondary" @onclick="CloseStorageLocationModal">Cancel</button>
+                <button class="btn btn-success" @onclick="SaveStorageLocation" disabled="@_savingStorageLocation">
+                    @(_savingStorageLocation ? "Saving..." : "Add Location")
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 <!-- Add/Edit Item Modal -->
 @if (showModal)
@@ -210,15 +243,38 @@
                     <label>SKU</label>
                     <input type="text" class="form-control" @bind="modalItem.SKU" />
                 </div>
-                <div class="form-group mb-3">
-                    <label>Category</label>
-                    <select class="form-control" @bind="modalItem.Category">
-                        <option value="">Select Category</option>
-                        @foreach (var category in categories)
-                        {
-                            <option value="@category">@category</option>
-                        }
-                    </select>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label>Category</label>
+                            <select class="form-control" @bind="modalItem.Category">
+                                <option value="">Select Category</option>
+                                @foreach (var category in categories)
+                                {
+                                    <option value="@category">@category</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label>Location</label>
+                            <div class="d-flex gap-2">
+                                <select class="form-control" @bind="modalItem.StorageLocationName">
+                                    <option value="">Select Location</option>
+                                    @foreach (var location in storageLocations)
+                                    {
+                                        <option value="@location">@location</option>
+                                    }
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" 
+                                style="border-width: 2px; border-radius: 10px;"
+                                        @onclick="OpenStorageLocationModal" title="Add new location">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
@@ -275,6 +331,7 @@
     private List<int> pageButtons = new();
     private HashSet<int> selectedIds = new();
     private List<string> categories = new();
+    private List<string> storageLocations = new();
 
     private int? _openMenuId = null;
     private double _menuX = 0;
@@ -300,6 +357,9 @@
     private void CloseMenu() => _openMenuId = null;
 
     private bool showModal = false;
+    private bool showStorageLocationModal = false;
+    private string newStorageLocationName = "";
+    private bool _savingStorageLocation = false;
     private bool _saving = false;
     private bool _ready = false;
     private bool _allowed = false;
@@ -337,12 +397,15 @@
 
     private void OnLocationChanged()
     {
-        _ = InvokeAsync(async () => {
-            try {
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
                 await LoadCatalogData();
                 StateHasChanged();
             }
-            catch (Exception){
+            catch (Exception)
+            {
                 // add some logging later
             }
         });
@@ -364,6 +427,7 @@
         {
             itemCatalog = new();
             categories = EnumService.GetCategories();
+            storageLocations = new List<string>();
             _units = await UnitService.GetAllAsync();
             FilterItems();
             isLoading = false;
@@ -380,9 +444,17 @@
             .OrderBy(c => c)
             .ToList();
 
-        _units = await UnitService.GetByLocationAsync(locId.Value);
-        if (!_units.Any())
-            _units = await UnitService.GetAllAsync();
+        var locationUnits = await UnitService.GetByLocationAsync(locId.Value);
+
+        var allUnits = await UnitService.GetAllAsync();
+        _units = locationUnits
+            .Union(allUnits)
+            .DistinctBy(u => u.Id)  // requires .NET 6+
+            .OrderBy(u => u.Name)
+            .ToList();
+
+        var storageLocs = await StorageLocService.GetByLocationAsync(locId.Value);
+        storageLocations = storageLocs?.Select(sl => sl.Name ?? string.Empty).ToList() ?? new List<string>();
 
         FilterItems();
         isLoading = false;
@@ -425,9 +497,12 @@
     {
         filteredItems = sortColumn switch
         {
-            "name" => sortAscending ? filteredItems.OrderBy(i => i.Name).ToList() : filteredItems.OrderByDescending(i => i.Name).ToList(),
-            "price" => sortAscending ? filteredItems.OrderBy(i => i.Price).ToList() : filteredItems.OrderByDescending(i => i.Price).ToList(),
-            "supplier" => sortAscending ? filteredItems.OrderBy(i => i.VendorName).ToList() : filteredItems.OrderByDescending(i => i.VendorName).ToList(),
+            "name" => sortAscending ? filteredItems.OrderBy(i => i.Name).ToList() : filteredItems.OrderByDescending(i =>
+i.Name).ToList(),
+            "price" => sortAscending ? filteredItems.OrderBy(i => i.Price).ToList() : filteredItems.OrderByDescending(i =>
+i.Price).ToList(),
+            "supplier" => sortAscending ? filteredItems.OrderBy(i => i.VendorName).ToList() : filteredItems.OrderByDescending(i =>
+i.VendorName).ToList(),
             _ => filteredItems
         };
     }
@@ -529,6 +604,7 @@
             CurrentQuantity = item.CurrentQuantity,
             ReorderLevel = item.ReorderLevel,
             LocationId = LocationState.CurrentLocation?.Id ?? 0,
+            StorageLocationName = item.StorageLocationName,
             UnitId = item.UnitId,
             VendorId = item.VendorId
         };
@@ -537,6 +613,12 @@
 
     private async Task SaveItem()
     {
+        if (modalItem.UnitId == 0)
+        {
+            @* _saveError = "Please select a unit."; *@
+            return;
+        }
+
         _saving = true;
         try
         {
@@ -546,6 +628,15 @@
             }
             else
             {
+                // Resolve StorageLocationName -> StorageLocationId
+                int? storageLocId = null;
+                if (!string.IsNullOrWhiteSpace(modalItem.StorageLocationName))
+                {
+                    var allLocs = await StorageLocService.GetByLocationAsync(LocationState.CurrentLocation?.Id ?? 0);
+                    storageLocId = allLocs?.FirstOrDefault(l => 
+                        string.Equals(l.Name, modalItem.StorageLocationName, StringComparison.OrdinalIgnoreCase))?.Id;
+                }
+
                 var dto = new InventoryItemDTO
                 {
                     Id = editingItem.Id,
@@ -557,6 +648,7 @@
                     ReorderLevel = modalItem.ReorderLevel,
                     UnitId = modalItem.UnitId,
                     VendorId = modalItem.VendorId,
+                    StorageLocationId = storageLocId,
                 };
                 await InventoryService.UpdateItemAsync(dto);
             }
@@ -601,5 +693,52 @@
     {
         get => selectedCategory;
         set { selectedCategory = value; FilterItems(); }
+    }
+
+    private void OpenStorageLocationModal()
+    {
+        showModal = false;
+        newStorageLocationName = "";
+        showStorageLocationModal = true;
+    }
+
+    private void CloseStorageLocationModal()
+    {
+        showStorageLocationModal = false;
+        newStorageLocationName = "";
+        showModal = true;
+    }
+
+    private async Task SaveStorageLocation()
+    {
+        if (string.IsNullOrWhiteSpace(newStorageLocationName))
+            return;
+
+        _savingStorageLocation = true;
+        try
+        {
+            var locId = LocationState.CurrentLocation?.Id ?? 0;
+            var entity = new StorageLocation
+            {
+                Name = newStorageLocationName.Trim(),
+                LocationId = locId
+            };
+            await StorageLocService.AddAsync(entity);
+
+            // Refresh the list and auto-select the new location
+            var storageLocs = await StorageLocService.GetByLocationAsync(locId);
+            storageLocations = storageLocs?.Select(sl => sl.Name ?? string.Empty).ToList() ?? new();
+            modalItem.StorageLocationName = newStorageLocationName.Trim();
+
+            CloseStorageLocationModal();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to add storage location: {ex}");
+        }
+        finally
+        {
+            _savingStorageLocation = false;
+        }
     }
 }
