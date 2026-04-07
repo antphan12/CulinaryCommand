@@ -4,6 +4,7 @@ using CulinaryCommand.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CulinaryCommand.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260405213822_FixIngredientUnitRelation")]
+    partial class FixIngredientUnitRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -662,76 +665,6 @@ namespace CulinaryCommand.Migrations
                     b.ToTable("Vendors");
                 });
 
-            modelBuilder.Entity("CulinaryCommandApp.Inventory.DTOs.InventoryItemDTO", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<decimal>("CurrentQuantity")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<bool>("IsLowStock")
-                        .HasColumnType("bit(1)");
-
-                    b.Property<DateTime?>("LastOrderDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("OutOfStockDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<decimal>("ReorderLevel")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<string>("SKU")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int?>("StorageLocationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StorageLocationName")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("UnitId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("VendorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("VendorLogoUrl")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("VendorName")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StorageLocationId");
-
-                    b.ToTable("InventoryItemDTO");
-                });
-
             modelBuilder.Entity("CulinaryCommandApp.Inventory.Entities.Ingredient", b =>
                 {
                     b.Property<int>("Id")
@@ -772,9 +705,6 @@ namespace CulinaryCommand.Migrations
                     b.Property<decimal>("StockQuantity")
                         .HasColumnType("decimal(18, 4)");
 
-                    b.Property<int?>("StorageLocationId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UnitId")
                         .HasColumnType("int");
 
@@ -787,8 +717,6 @@ namespace CulinaryCommand.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("LocationId");
-
-                    b.HasIndex("StorageLocationId");
 
                     b.HasIndex("UnitId");
 
@@ -846,26 +774,6 @@ namespace CulinaryCommand.Migrations
                     b.HasIndex("UnitId");
 
                     b.ToTable("LocationUnits");
-                });
-
-            modelBuilder.Entity("CulinaryCommandApp.Inventory.Entities.StorageLocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("LocationId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StorageLocations");
                 });
 
             modelBuilder.Entity("CulinaryCommandApp.Inventory.Entities.Unit", b =>
@@ -1274,13 +1182,6 @@ namespace CulinaryCommand.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("CulinaryCommandApp.Inventory.DTOs.InventoryItemDTO", b =>
-                {
-                    b.HasOne("CulinaryCommandApp.Inventory.Entities.StorageLocation", null)
-                        .WithMany("InventoryItems")
-                        .HasForeignKey("StorageLocationId");
-                });
-
             modelBuilder.Entity("CulinaryCommandApp.Inventory.Entities.Ingredient", b =>
                 {
                     b.HasOne("CulinaryCommand.Data.Entities.Location", "Location")
@@ -1288,10 +1189,6 @@ namespace CulinaryCommand.Migrations
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CulinaryCommandApp.Inventory.Entities.StorageLocation", "StorageLocation")
-                        .WithMany()
-                        .HasForeignKey("StorageLocationId");
 
                     b.HasOne("CulinaryCommandApp.Inventory.Entities.Unit", "Unit")
                         .WithMany("Ingredients")
@@ -1305,8 +1202,6 @@ namespace CulinaryCommand.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Location");
-
-                    b.Navigation("StorageLocation");
 
                     b.Navigation("Unit");
 
@@ -1472,11 +1367,6 @@ namespace CulinaryCommand.Migrations
             modelBuilder.Entity("CulinaryCommand.Vendor.Entities.Vendor", b =>
                 {
                     b.Navigation("LocationVendors");
-                });
-
-            modelBuilder.Entity("CulinaryCommandApp.Inventory.Entities.StorageLocation", b =>
-                {
-                    b.Navigation("InventoryItems");
                 });
 
             modelBuilder.Entity("CulinaryCommandApp.Inventory.Entities.Unit", b =>

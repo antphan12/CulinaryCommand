@@ -16,6 +16,7 @@
 @inject IVendorService VendorService
 @inject ILocationService LocationService
 @inject IUnitService UnitService
+@inject StorageLocationService StorageLocService
 @inject IUserContextService UserCtx
 @inject NavigationManager Nav
 @inject IConfiguration Config
@@ -47,7 +48,7 @@
                 <i class="bi bi-arrow-left me-1"></i>Back
             </a>
             <div>
-                <h3 class="mb-0">Configure Restaurant</h3>
+                <h3 class="mb-0">Configure Location</h3>
                 <span class="text-muted fs-6">@_location.Name · @_location.City, @_location.State</span>
             </div>
         </div>
@@ -188,6 +189,103 @@
             {
                 <div class="card-footer d-flex justify-content-end gap-2">
                     <span class="text-muted align-self-center small">@_locationUnits.Count unit(s) at this location</span>
+                </div>
+            }
+        </div>
+
+        <!-- Storage Locations Section -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Storage Locations</h5>
+                <button class="btn btn-success btn-sm" @onclick="OpenAddStorageLocationModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Storage Location
+                </button>
+            </div>
+
+            <div class="card-body p-0">
+                @if (!_storageLocations.Any())
+                {
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                        No storage locations assigned yet. Add one to get started.
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loc in _storageLocations)
+                            {
+                                <tr>
+                                    <td>
+                                        @if (_editingStorageLocationId == loc.Id)
+                                        {
+                                            <input type="text" class="form-control form-control-sm"
+                                                @bind="_editingStorageLocationName"
+                                                style="max-width: 300px;" />
+                                        }
+                                        else
+                                        {
+                                            <strong>@loc.Name</strong>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        @if (_editingStorageLocationId == loc.Id)
+                                        {
+                                            <button class="btn btn-success btn-sm me-1"
+                                                    @onclick="SaveStorageLocationEdit"
+                                                    disabled="@_savingStorageLocation">
+                                                @if (_savingStorageLocation)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-check-lg"></i>
+                                                }
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm"
+                                                    @onclick="CancelStorageLocationEdit">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-outline-primary btn-sm me-1"
+                                                    @onclick="() => StartEditStorageLocation(loc)"
+                                                    title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                    @onclick="() => DeleteStorageLocation(loc.Id)"
+                                                    title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (!string.IsNullOrEmpty(_storageLocationDeleteError))
+                    {
+                        <div class="alert alert-warning mt-2 mb-0 mx-3 py-2 px-3">
+                            <i class="bi bi-exclamation-triangle me-1"></i>@_storageLocationDeleteError
+                        </div>
+                    }
+                }
+            </div>
+
+            @if (_storageLocations.Any())
+            {
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <span class="text-muted align-self-center small">@_storageLocations.Count storage location(s)</span>
                 </div>
             }
         </div>
@@ -366,6 +464,40 @@
     </div>
 }
 
+@if (_showAddStorageLocationModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background:rgba(0,0,0,0.4);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Storage Location</h5>
+                    <button type="button" class="btn-close" @onclick="CloseAddStorageLocationModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Location Name</label>
+                        <input type="text" class="form-control" @bind="_newStorageLocationName"
+                               placeholder="e.g. Walk-in Freezer, Dry Storage..." />
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary"
+                                @onclick="CloseAddStorageLocationModal">Cancel</button>
+                        <button type="button" class="btn btn-success"
+                                disabled="@(_savingStorageLocation || string.IsNullOrWhiteSpace(_newStorageLocationName))"
+                                @onclick="CreateStorageLocation">
+                            @if (_savingStorageLocation)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            Add Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public int LocationId { get; set; }
 
@@ -373,12 +505,22 @@
     private List<Vendor> _locationVendors = new();
     private List<Unit> _locationUnits = new();
     private List<Unit> _availableUnitsToAdd = new();
+    private List<StorageLocation> _storageLocations = new();
 
     private bool _hydrated;
     private bool _showAddVendorModal;
     private bool _creatingVendor;
     private bool _showAddUnitModal;
     private bool _addingUnit;
+    
+    // Storage Locations
+    private bool _showAddStorageLocationModal;
+    private bool _addingStorageLocation;
+    private string _newStorageLocationName = "";
+    private bool _savingStorageLocation;
+    private int? _editingStorageLocationId;
+    private string _editingStorageLocationName = "";
+    private string? _storageLocationDeleteError;
     private int _selectedUnitId;
 
     private Vendor _newVendor = new();
@@ -424,6 +566,7 @@
         {
             _locationVendors = await VendorService.GetVendorsByLocationAsync(LocationId);
             _locationUnits   = await UnitService.GetByLocationAsync(LocationId);
+            _storageLocations = await StorageLocService.GetByLocationAsync(LocationId);
         }
 
         _hydrated = true;
@@ -596,5 +739,102 @@
         await UnitService.SetLocationUnitsAsync(LocationId, remaining);
         _locationUnits = await UnitService.GetByLocationAsync(LocationId);
         StateHasChanged();
+    }
+
+    private void OpenAddStorageLocationModal()
+    {
+        _newStorageLocationName = "";
+        _storageLocationDeleteError = null;
+        _showAddStorageLocationModal = true;
+    }
+
+    private void CloseAddStorageLocationModal()
+    {
+        _showAddStorageLocationModal = false;
+        _newStorageLocationName = "";
+    }
+
+    private async Task CreateStorageLocation()
+    {
+        if (string.IsNullOrWhiteSpace(_newStorageLocationName)) return;
+
+        _savingStorageLocation = true;
+        try
+        {
+            await StorageLocService.AddAsync(new StorageLocation
+            {
+                Name = _newStorageLocationName.Trim(),
+                LocationId = LocationId
+            });
+            _storageLocations = await StorageLocService.GetByLocationAsync(LocationId);
+            CloseAddStorageLocationModal();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to create storage location: {ex}");
+        }
+        finally
+        {
+            _savingStorageLocation = false;
+        }
+    }
+
+    private void StartEditStorageLocation(StorageLocation loc)
+    {
+        _editingStorageLocationId = loc.Id;
+        _editingStorageLocationName = loc.Name ?? "";
+        _storageLocationDeleteError = null;
+    }
+
+    private void CancelStorageLocationEdit()
+    {
+        _editingStorageLocationId = null;
+        _editingStorageLocationName = "";
+    }
+
+    private async Task SaveStorageLocationEdit()
+    {
+        if (_editingStorageLocationId is null || string.IsNullOrWhiteSpace(_editingStorageLocationName)) return;
+
+        _savingStorageLocation = true;
+        try
+        {
+            var entity = _storageLocations.FirstOrDefault(l => l.Id == _editingStorageLocationId);
+            if (entity is not null)
+            {
+                entity.Name = _editingStorageLocationName.Trim();
+                await StorageLocService.UpdateAsync(entity);
+                _storageLocations = await StorageLocService.GetByLocationAsync(LocationId);
+            }
+            CancelStorageLocationEdit();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to update storage location: {ex}");
+        }
+        finally
+        {
+            _savingStorageLocation = false;
+        }
+    }
+
+    private async Task DeleteStorageLocation(int id)
+    {
+        _storageLocationDeleteError = null;
+        try
+        {
+            var inUse = await StorageLocService.IsInUseAsync(id);
+            if (inUse)
+            {
+                _storageLocationDeleteError = "This location is assigned to one or more ingredients. Reassign them first.";
+                return;
+            }
+            await StorageLocService.DeleteAsync(id);
+            _storageLocations = await StorageLocService.GetByLocationAsync(LocationId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to delete storage location: {ex}");
+        }
     }
 }
