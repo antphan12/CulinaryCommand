@@ -12,9 +12,10 @@ Testing application:
 The Playwright UI test project lives in [PlaywrightTests](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests).
 
 Current admin coverage summary:
-- Dashboard access and navigation
+- Dashboard access, Cognito login redirect, and navigation
 - Manage users create, invite verification, edit, cancel, and validation flows
 - Recipe and ingredient create/edit/filter/delete flows
+- Inventory management lifecycle, search, and delete-cancel flows
 
 Full coverage summary:
 - See [TEST_COVERAGE.md](/Users/wyatthunter/projects/sdmay26-44/TEST_COVERAGE.md)
@@ -69,6 +70,13 @@ cd PlaywrightTests
 HEADED=0 dotnet test --filter "FullyQualifiedName~RecipeTests"
 ```
 
+Run the inventory management coverage:
+
+```bash
+cd PlaywrightTests
+HEADED=0 dotnet test --filter "FullyQualifiedName~InventoryManagementTests"
+```
+
 Run the recipe lifecycle test only:
 
 ```bash
@@ -89,3 +97,4 @@ PWDEBUG=1 HEADED=1 dotnet test --filter "FullyQualifiedName~ManageUsers"
 - [PlaywrightTests/Tests/ActualTests/AdminTests/ManageUsersTests.cs](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests/Tests/ActualTests/AdminTests/ManageUsersTests.cs)
 - [PlaywrightTests/Tests/ActualTests/AdminTests/ManageUsers_EditTests.cs](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests/Tests/ActualTests/AdminTests/ManageUsers_EditTests.cs)
 - [PlaywrightTests/Tests/ActualTests/AdminTests/RecipeTests.cs](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests/Tests/ActualTests/AdminTests/RecipeTests.cs)
+- [PlaywrightTests/Tests/ActualTests/AdminTests/InventoryManagementTests.cs](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests/Tests/ActualTests/AdminTests/InventoryManagementTests.cs)

@@ -7,7 +7,7 @@ This file summarizes the current Playwright coverage in this repository.
 Source: [PlaywrightTests/Tests/ActualTests/AdminTests/DashboardTests.cs](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests/Tests/ActualTests/AdminTests/DashboardTests.cs)
 
 Current coverage:
-- Authenticated admin is redirected away from `/login` to `/dashboard` or `/tasks`
+- `/login` redirects into the Cognito hosted login flow
 - Admin can load `/dashboard`
 - Admin lands on `/dashboard`
 - Admin can see the `Add User` button on `/users`
@@ -50,6 +50,21 @@ Current coverage:
 - Clean up created recipe and ingredient test data
 - Create a sub-recipe
 - Filter and verify the sub-recipe on the `Sub-Recipes / Prep Items` tab
+
+## Inventory Management
+
+Source: [PlaywrightTests/Tests/ActualTests/AdminTests/InventoryManagementTests.cs](/Users/wyatthunter/projects/sdmay26-44/PlaywrightTests/Tests/ActualTests/AdminTests/InventoryManagementTests.cs)
+
+Current coverage:
+- Create an ingredient through `/inventory-catalog`
+- Open inventory management and verify the created item appears
+- Edit an inventory item to low stock from inventory management
+- Verify low-stock filtering shows the edited item
+- Delete the inventory item from inventory management
+- Search inventory management by SKU and by name
+- Verify search hides non-matching items
+- Dismiss inventory delete confirmation and verify the item remains
+- Clean up created inventory test data safely
 
 ## Shared Test Pattern
 
