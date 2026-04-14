@@ -2,6 +2,7 @@
 @using CulinaryCommand.Data.Entities
 @using System.Text.Json
 @using CulinaryCommand.Services.UserContextSpace
+@using System.Numerics
 
 @inject ILocationService LocationService
 @inject LocationState LocationState
@@ -83,6 +84,10 @@
         try
         {
             var json = await JS.InvokeAsync<string?>("localStorage.getItem", "cc_locations");
+            
+            var savedId = await JS.InvokeAsync<string>("localStorage.getItem", LocationState.ActiveLocStorageKey);
+            Location loc = await LocationService.GetLocationByIdAsync(int.Parse(savedId));
+            SetLocation(loc);
             return string.IsNullOrWhiteSpace(json)
                 ? new List<Location>()
                 : (JsonSerializer.Deserialize<List<Location>>(json) ?? new List<Location>());
