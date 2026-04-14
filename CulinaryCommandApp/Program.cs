@@ -23,13 +23,12 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.DataProtection;
 using CulinaryCommand.Vendor.Services;
 using System.IO;
+using CulinaryCommandApp.Inventory.Entities;
 
 
 
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddBlazorBootstrap();
 
 //
 // =====================
@@ -37,6 +36,7 @@ builder.Services.AddBlazorBootstrap();
 // =====================
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
 //
 // =====================
 // Cognito Authentication (MUST be before Build)
@@ -51,11 +51,6 @@ builder.Services
   .AddCookie()
   .AddOpenIdConnect(options =>
   {
-      options.CorrelationCookie.SameSite = SameSiteMode.None;
-      options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-      options.NonceCookie.SameSite = SameSiteMode.None;
-      options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-
       options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 
       // ---- Read Cognito config (env/appsettings) ----
@@ -123,12 +118,8 @@ builder.Services.AddAuthorization();
 // =====================
 // AI Services
 // =====================
-builder.Services.AddSingleton<Client>(sp =>
-{
-    var apiKey = builder.Configuration["Google:ApiKey"]
-        ?? throw new InvalidOperationException("Missing config: Google:ApiKey");
-    return new Client(apiKey: apiKey);
-});builder.Services.AddScoped<AIReportingService>();
+builder.Services.AddSingleton<Client>(_ => new Client());
+builder.Services.AddScoped<AIReportingService>();
 
 //
 // =====================
@@ -166,6 +157,7 @@ builder.Services.AddScoped<CognitoProvisioningService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
 builder.Services.AddScoped<UnitService>();
 builder.Services.AddScoped<IngredientService>();
+builder.Services.AddScoped<StorageLocationService>();
 builder.Services.AddScoped<IIngredientService, IngredientService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<LocationState>();
