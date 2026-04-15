@@ -20,7 +20,7 @@
             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
             <input class="form-control"
                    placeholder="Search templates..."
-                   @bind="SearchTermValue"
+                   @bind="TaskLibrarySearchValue"
                    @bind:event="oninput" />
         </div>
 
@@ -95,8 +95,8 @@
 @code {
     [Parameter] public List<TaskTemplate> Templates { get; set; } = new();
     [Parameter] public int TemplateCount { get; set; }
-    [Parameter] public string SearchTerm { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
+    [Parameter] public string TaskLibrarySearch { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TaskLibrarySearchChanged { get; set; }
     [Parameter] public IReadOnlyCollection<int> SelectedTemplateIds { get; set; } = Array.Empty<int>();
     [Parameter] public Func<string, string> PriorityBadgeClass { get; set; } = default!;
     [Parameter] public EventCallback<int> OnToggleSelection { get; set; }
@@ -104,10 +104,10 @@
     [Parameter] public EventCallback<TaskTemplate> OnEditTemplate { get; set; }
     [Parameter] public EventCallback<int> OnArchiveTemplate { get; set; }
 
-    private string SearchTermValue
+    private string TaskLibrarySearchValue
     {
-        get => SearchTerm;
-        set => _ = SearchTermChanged.InvokeAsync(value);
+        get => TaskLibrarySearch;
+        set => _ = TaskLibrarySearchChanged.InvokeAsync(value);
     }
 
     private Task HandleToggleSelection(int templateId) => OnToggleSelection.InvokeAsync(templateId);

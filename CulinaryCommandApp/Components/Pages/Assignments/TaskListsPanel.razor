@@ -20,7 +20,7 @@
             <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
             <input class="form-control"
                    placeholder="Search lists..."
-                   @bind="SearchTermValue"
+                   @bind="TaskListSearchValue"
                    @bind:event="oninput" />
         </div>
 
@@ -83,18 +83,18 @@
 @code {
     [Parameter] public List<TaskList> TaskLists { get; set; } = new();
     [Parameter] public int TaskListCount { get; set; }
-    [Parameter] public string SearchTerm { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string> SearchTermChanged { get; set; }
+    [Parameter] public string TaskListSearch { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TaskListSearchChanged { get; set; }
     [Parameter] public EventCallback<int> OnAssignList { get; set; }
     [Parameter] public EventCallback OnCreateTaskList { get; set; }
     [Parameter] public EventCallback<TaskList> OnEditTaskList { get; set; }
     [Parameter] public EventCallback<TaskList> OnManageTemplates { get; set; }
     [Parameter] public EventCallback<int> OnArchiveTaskList { get; set; }
 
-    private string SearchTermValue
+    private string TaskListSearchValue
     {
-        get => SearchTerm;
-        set => _ = SearchTermChanged.InvokeAsync(value);
+        get => TaskListSearch;
+        set => _ = TaskListSearchChanged.InvokeAsync(value);
     }
 
     private Task HandleAssignList(int taskListId) => OnAssignList.InvokeAsync(taskListId);
