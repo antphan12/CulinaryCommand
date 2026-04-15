@@ -277,71 +277,18 @@ else
                     <!-- QUICK ASSIGN -->
                     @if (SelectedTemplates.Any())
                     {
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h5 class="fw-semibold mb-1 text-success">Quick Assign</h5>
-                                        <div class="text-muted small">
-                                            @SelectedTemplates.Count task@(SelectedTemplates.Count == 1 ? "" : "s") selected
-                                        </div>
-                                    </div>
-
-                                    <button class="btn btn-outline-secondary btn-sm" @onclick="ClearSelectedTemplates">
-                                        Clear
-                                    </button>
-                                </div>
-
-                                <div class="mb-3">
-                                    <div class="d-flex flex-wrap gap-2">
-                                        @foreach (var template in SelectedTemplates)
-                                        {
-                                            <span class="badge rounded-pill bg-light text-dark border px-3 py-2">
-                                                @template.Name
-                                            </span>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Assign to</label>
-                                        <InputSelect class="form-select" @bind-Value="quickAssignUserId">
-                                            <option value="">Unassigned</option>
-                                            @foreach (var user in teamMembers)
-                                            {
-                                                <option value="@user.Id">@user.Name (@user.Role)</option>
-                                            }
-                                        </InputSelect>
-                                    </div>
-
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Due date</label>
-                                        <InputDate class="form-control" @bind-Value="quickAssignDueDate" />
-                                    </div>
-
-                                    <div class="col-12 col-md-4">
-                                        <label class="form-label">Priority override</label>
-                                        <InputSelect class="form-select" @bind-Value="quickAssignPriority">
-                                            <option value="Keep Original">Keep Original</option>
-                                            @foreach (var p in priorityOptions)
-                                            {
-                                                <option value="@p">@p</option>
-                                            }
-                                        </InputSelect>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex justify-content-end gap-2 mt-4">
-                                    <button class="btn btn-light border" @onclick="ClearSelectedTemplates">
-                                        Cancel
-                                    </button>
-                                    <button class="btn btn-success" @onclick="QuickAssignSelectedTemplates">
-                                        Assign Selected Tasks
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <QuickAssignPanel
+                            SelectedTemplates="SelectedTemplates"
+                            TeamMembers="teamMembers"
+                            PriorityOptions="priorityOptions"
+                            AssignedUserId="quickAssignUserId"
+                            AssignedUserIdChanged="@(value => quickAssignUserId = value)"
+                            DueDate="quickAssignDueDate"
+                            DueDateChanged="@(value => quickAssignDueDate = value)"
+                            Priority="quickAssignPriority"
+                            PriorityChanged="@(value => quickAssignPriority = value)"
+                            OnAssign="QuickAssignSelectedTemplates"
+                            OnClear="ClearSelectedTemplates" />
                     }
 
                     <!-- BOARD HEADER -->
