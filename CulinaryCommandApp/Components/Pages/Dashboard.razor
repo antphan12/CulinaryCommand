@@ -6,8 +6,11 @@
 @using CulinaryCommandApp.AIDashboard.Services.Reporting
 @using CulinaryCommandApp.AIDashboard.Services.DTOs
 @using CulinaryCommand.Services
+@using CulinaryCommandApp.Inventory.DTOs
+@using CulinaryCommandApp.Data.Models
 @inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 @inject NavigationManager Nav
+@inject LocationState LocationState
 @inject AIReportingService ReportingService
 @inject IUserContextService UserCtx
 
@@ -168,6 +171,9 @@ else
     private bool _ready;
     private bool _isSignedIn;
     private string? _role;
+
+    private List<InventoryItemDTO> _lowStockItems = new();
+    private List<TaskAssignmentModel> _taskData = new();
 
     private bool _aiLoading;
     private string? _aiAnalysis;
