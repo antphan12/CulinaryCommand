@@ -5,7 +5,6 @@
 @using CulinaryCommand.Data.Enums;
 @using WorkTaskStatus = CulinaryCommand.Data.Enums.TaskStatus
 @using CulinaryCommand.Services.UserContextSpace
-@using CulinaryCommandApp.Recipe.Services;
 @using CulinaryCommandApp.Recipe.Services.Interfaces;
 @using CulinaryCommandApp.Recipe.Entities;
 @using CulinaryCommandApp.Components.Pages.Assignments
@@ -13,7 +12,6 @@
 @inject IUserContextService UserCtx
 @inject NavigationManager Nav
 @inject ILocationService LocationService
-@inject IUserService UserService
 @inject LocationState LocationState
 @inject ITaskAssignmentService TaskService
 @inject IRecipeService RecipeService
@@ -40,18 +38,18 @@ else
 {
     <div class="container-fluid px-3 px-lg-4 mt-4 assign-task-page">
         @if (!string.IsNullOrWhiteSpace(pageSuccess))
-            {
-                <div class="alert alert-success">
-                    @pageSuccess
-                </div>
-            }
+        {
+            <div class="alert alert-success">
+                @pageSuccess
+            </div>
+        }
 
-            @if (!string.IsNullOrWhiteSpace(pageError))
-            {
-                <div class="alert alert-danger">
-                    @pageError
-                </div>
-            }
+        @if (!string.IsNullOrWhiteSpace(pageError))
+        {
+            <div class="alert alert-danger">
+                @pageError
+            </div>
+        }
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
             <div>
                 <div class="text-uppercase text-muted small fw-semibold mb-1">Kitchen Operations</div>
@@ -102,7 +100,7 @@ else
                         TemplateCount="taskTemplates.Count"
                         @bind-TaskLibrarySearch="taskLibrarySearch"
                         SelectedTemplateIds="selectedTemplateIds"
-                        PriorityBadgeClass="PriorityBadge"
+                        PriorityBadgeClass="GetPriorityBadgeClass"
                         OnToggleSelection="ToggleTemplateSelection"
                         OnCreateTemplate="OpenCreateTemplateModal"
                         OnEditTemplate="OpenEditTemplateModal"
@@ -142,10 +140,10 @@ else
 
                     <TaskBoardPanel
                         StatusBuckets="statusBuckets"
-                        TasksByStatus="TasksByStatus"
-                        PriorityBadgeClass="PriorityBadge"
-                        FormatAssignee="FormatAssignee"
-                        @bind-BoardSearch="searchTerm"
+                        TasksForStatus="TasksByStatus"
+                        PriorityBadgeClass="GetPriorityBadgeClass"
+                        AssigneeLabel="FormatAssigneeName"
+                        @bind-TaskBoardSearch="taskBoardSearch"
                         OnMarkInProgress="MarkInProgress"
                         OnMarkComplete="MarkComplete"
                         OnBumpTask="BumpTask"
@@ -199,7 +197,7 @@ else
     private List<Tasks> assignments = new();
     private TaskFormModel newTask = new();
     private int? selectedLocationId;
-    private string searchTerm = string.Empty;
+    private string taskBoardSearch = string.Empty;
     private List<Recipe> recipes = new();
     private List<TaskTemplate> taskTemplates = new();
     private List<TaskList> taskLists = new();
@@ -736,13 +734,13 @@ else
 
     private bool FilterBySearch(Tasks task)
     {
-        if (string.IsNullOrWhiteSpace(searchTerm))
+        if (string.IsNullOrWhiteSpace(taskBoardSearch))
             return true;
 
-        var term = searchTerm.Trim().ToLowerInvariant();
-        return task.Name.ToLowerInvariant().Contains(term)
-            || task.Station.ToLowerInvariant().Contains(term)
-            || FormatAssignee(task.UserId).ToLowerInvariant().Contains(term);
+        var term = taskBoardSearch.Trim().ToLowerInvariant();
+        return (task.Name ?? string.Empty).ToLowerInvariant().Contains(term)
+            || (task.Station ?? string.Empty).ToLowerInvariant().Contains(term)
+            || FormatAssigneeName(task.UserId).ToLowerInvariant().Contains(term);
     }
 
     private async Task MoveToStatus(int id, string status)
@@ -810,7 +808,7 @@ else
     private List<TaskTemplate> SelectedTemplates =>
         taskTemplates.Where(t => selectedTemplateIds.Contains(t.Id)).ToList();
 
-    private string FormatAssignee(int? id)
+    private string FormatAssigneeName(int? id)
     {
         if (!id.HasValue)
             return "Unassigned";
@@ -818,7 +816,7 @@ else
         return teamMembers.FirstOrDefault(u => u.Id == id.Value)?.Name ?? "Unassigned";
     }
 
-    private string PriorityBadge(string priority) => priority switch
+    private string GetPriorityBadgeClass(string priority) => priority switch
     {
         "Critical" => "badge bg-danger",
         "High" => "badge bg-warning text-dark",

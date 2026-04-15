@@ -13,7 +13,7 @@
                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                 <input class="form-control"
                        placeholder="Search tasks or people"
-                       @bind="BoardSearchValue"
+                       @bind="TaskBoardSearchValue"
                        @bind:event="oninput" />
             </div>
         </div>
@@ -23,7 +23,7 @@
 <div class="row g-3">
     @foreach (var status in StatusBuckets)
     {
-        var tasks = TasksByStatus(status).ToList();
+        var tasks = TasksForStatus(status).ToList();
 
         <div class="col-12 col-lg-4">
             <div class="card shadow-sm border-0 h-100">
@@ -53,7 +53,7 @@
 
                                     <div class="fw-semibold mb-1">@task.Name</div>
                                     <div class="text-muted small mb-1">@task.Station</div>
-                                    <div class="text-muted small mb-1">@FormatAssignee(task.UserId)</div>
+                                    <div class="text-muted small mb-1">@AssigneeLabel(task.UserId)</div>
                                     <div class="text-muted small">Due @task.DueDate.ToString("MMM d")</div>
 
                                     @if (!string.IsNullOrWhiteSpace(task.Notes))
@@ -99,21 +99,21 @@
 </div>
 
 @code {
-    [Parameter] public string BoardSearch { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string> BoardSearchChanged { get; set; }
+    [Parameter] public string TaskBoardSearch { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> TaskBoardSearchChanged { get; set; }
     [Parameter] public List<string> StatusBuckets { get; set; } = new();
-    [Parameter] public Func<string, IEnumerable<Tasks>> TasksByStatus { get; set; } = default!;
+    [Parameter] public Func<string, IEnumerable<Tasks>> TasksForStatus { get; set; } = default!;
     [Parameter] public Func<string, string> PriorityBadgeClass { get; set; } = default!;
-    [Parameter] public Func<int?, string> FormatAssignee { get; set; } = default!;
+    [Parameter] public Func<int?, string> AssigneeLabel { get; set; } = default!;
     [Parameter] public EventCallback<int> OnMarkInProgress { get; set; }
     [Parameter] public EventCallback<int> OnMarkComplete { get; set; }
     [Parameter] public EventCallback<int> OnBumpTask { get; set; }
     [Parameter] public EventCallback<int> OnDeleteTask { get; set; }
 
-    private string BoardSearchValue
+    private string TaskBoardSearchValue
     {
-        get => BoardSearch;
-        set => _ = BoardSearchChanged.InvokeAsync(value);
+        get => TaskBoardSearch;
+        set => _ = TaskBoardSearchChanged.InvokeAsync(value);
     }
 
     private Task HandleMarkInProgress(int taskId) => OnMarkInProgress.InvokeAsync(taskId);
