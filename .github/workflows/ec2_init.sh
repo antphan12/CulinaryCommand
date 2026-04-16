@@ -87,6 +87,13 @@ LOGODEV_SECRET_KEY=$(aws ssm get-parameter \
     --query "Parameter.Value" \
     --output text)
 
+RESEND_API_TOKEN=$(aws ssm get-parameter \
+    --name "/culinarycommand/prod/Email__ResendApiToken" \
+    --with-decryption \
+    --region us-east-2 \
+    --query "Parameter.Value" \
+    --output text)
+
 # Write environment variables to file
 echo "[6/8] Writing environment file..."
 cat > /etc/culinarycommand.env << EOF
@@ -104,6 +111,7 @@ AWS__Region=us-east-2
 GOOGLE_API_KEY=${GOOGLE_API_KEY}
 LogoDev__PublishableKey=${LOGODEV_PUBLISHABLE_KEY}
 LogoDev__SecretKey=${LOGODEV_SECRET_KEY}
+Email__ResendApiToken=${RESEND_API_TOKEN}
 EOF
 chmod 600 /etc/culinarycommand.env
 
