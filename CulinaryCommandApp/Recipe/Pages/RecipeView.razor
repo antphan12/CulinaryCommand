@@ -113,18 +113,6 @@
                     }
                 </ul>
 
-                @* Allergens *@
-                @if (!string.IsNullOrWhiteSpace(recipe.Allergens))
-                {
-                    <div class="rv-section-block">
-                        <h4 class="rv-section-label">Allergens</h4>
-                        <div class="rv-allergen-row">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <span>Contains: @recipe.Allergens</span>
-                        </div>
-                    </div>
-                }
-
 
             </aside>
 
