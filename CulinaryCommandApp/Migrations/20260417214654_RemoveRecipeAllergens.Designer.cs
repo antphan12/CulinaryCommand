@@ -4,6 +4,7 @@ using CulinaryCommand.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CulinaryCommand.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417214654_RemoveRecipeAllergens")]
+    partial class RemoveRecipeAllergens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -209,7 +212,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("varchar(512)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("LocationId")
                         .HasColumnType("int");
@@ -282,7 +285,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("Kind")
                         .HasColumnType("int");
@@ -431,7 +434,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("InviteToken")
                         .HasColumnType("longtext");
@@ -440,7 +443,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -506,7 +509,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsLocationLocked")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("LocationId")
                         .HasColumnType("int");
@@ -629,7 +632,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("varchar(256)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("LogoUrl")
                         .HasMaxLength(512)
@@ -678,7 +681,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("decimal(65,30)");
 
                     b.Property<bool>("IsLowStock")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime?>("LastOrderDate")
                         .HasColumnType("datetime(6)");
@@ -915,7 +918,7 @@ namespace CulinaryCommand.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<bool>("IsSubRecipe")
-                        .HasColumnType("bit(1)");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("LocationId")
                         .HasColumnType("int");

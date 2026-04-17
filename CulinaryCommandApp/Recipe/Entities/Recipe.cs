@@ -32,9 +32,6 @@ namespace CulinaryCommandApp.Recipe.Entities
         [MaxLength(128)]
         public string? PortionSize { get; set; }
 
-        [MaxLength(256)]
-        public string? Allergens { get; set; }
-
         // Base64-encoded image (no MaxLength → LONGTEXT in MySQL)
         public string? ImageData { get; set; }
 
