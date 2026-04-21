@@ -103,6 +103,11 @@ builder.Services
 
       options.TokenValidationParameters.NameClaimType = "cognito:username";
       options.TokenValidationParameters.RoleClaimType = "cognito:groups";
+
+      // Allow correlation/nonce cookies over plain HTTP in development
+      options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+      options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
       options.Events.OnRedirectToIdentityProvider = ctx =>
         {
             // Forces correct scheme/host behind nginx
@@ -119,7 +124,10 @@ builder.Services.AddAuthorization();
 // =====================
 // AI Services
 // =====================
-builder.Services.AddSingleton<Client>(_ => new Client());
+var googleApiKey = builder.Configuration["Google:ApiKey"]
+    ?? Environment.GetEnvironmentVariable("GOOGLE_API_KEY")
+    ?? throw new InvalidOperationException("Missing config: Google:ApiKey (or GOOGLE_API_KEY env var).");
+builder.Services.AddSingleton<Client>(new Client(apiKey: googleApiKey));
 builder.Services.AddScoped<AIReportingService>();
 
 //
