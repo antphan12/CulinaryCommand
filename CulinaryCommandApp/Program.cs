@@ -104,9 +104,12 @@ builder.Services
       options.TokenValidationParameters.NameClaimType = "cognito:username";
       options.TokenValidationParameters.RoleClaimType = "cognito:groups";
 
-      // OIDC correlation/nonce cookies use SameSite=None, so browsers require Secure.
-      options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
-      options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
+      // Secure cookies only work over HTTPS; use SameAsRequest in dev (HTTP).
+      var securePolicy = builder.Environment.IsDevelopment()
+          ? CookieSecurePolicy.SameAsRequest
+          : CookieSecurePolicy.Always;
+      options.CorrelationCookie.SecurePolicy = securePolicy;
+      options.NonceCookie.SecurePolicy = securePolicy;
 
       options.Events.OnRedirectToIdentityProvider = ctx =>
         {
