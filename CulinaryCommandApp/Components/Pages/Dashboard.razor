@@ -68,75 +68,60 @@ else
 
         <hr />
 
-        <div class="card mt-4">
+        <!-- ═══════════════════════════════════════════════════════════
+             AI WEEKLY ANALYSIS
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-robot me-1 text-primary"></i>Weekly Report Analysis</span>
+                @if (_aiAnalysisObj != null)
+                {
+                    <small class="text-muted">Generated: @_aiAnalysisObj.GeneratedAt?.ToLocalTime().ToString("g")</small>
+                }
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Weekly Report Analysis</h5>
-
                 @if (_aiLoading)
                 {
-                    <div>Loading analysis from Gemini...</div>
+                    <div class="d-flex align-items-center gap-2 text-muted py-3">
+                        <div class="spinner-border spinner-border-sm" role="status"></div>
+                        <span>Generating analysis with Gemini…</span>
+                    </div>
                 }
                 else if (_aiAnalysisObj == null)
                 {
-                    <div class="text-muted">No analysis available.</div>
+                    <div class="d-flex align-items-center justify-content-center py-4">
+                        <p class="text-muted mb-0"><i class="bi bi-info-circle me-2"></i>No analysis available.</p>
+                    </div>
                 }
                 else
                 {
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">@_aiAnalysisObj.Title</h5>
-                                    <p class="card-text">@_aiAnalysisObj.Summary</p>
-                                    <p class="mb-1"><small class="text-muted">Generated: @_aiAnalysisObj.GeneratedAt?.ToLocalTime().ToString("g")</small></p>
-                                    <p><small class="text-muted">Confidence: @((_aiAnalysisObj.Confidence ?? 0).ToString("P0"))</small></p>
-                                </div>
-                            </div>
-                        </div>
-
+                    <!-- Summary + confidence -->
+                    <div class="row g-3 mb-3">
                         <div class="col-md-8">
-                            <div class="row g-3">
-                                @if (_aiAnalysisObj.Metrics != null && _aiAnalysisObj.Metrics.Any())
-                                {
-                                    foreach (var m in _aiAnalysisObj.Metrics)
-                                    {
-                                        <div class="col-sm-6">
-                                            <div class="card h-100 border-primary">
-                                                <div class="card-body">
-                                                    <h6 class="card-subtitle mb-2 text-muted">@m.Label</h6>
-                                                    <p class="card-text fs-4">@m.Value @(!string.IsNullOrWhiteSpace(m.Unit) ? m.Unit : "")</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                            </div>
-
-                            <div class="mt-3">
-                                @if (_aiAnalysisObj.Recommendations != null && _aiAnalysisObj.Recommendations.Any())
-                                {
-                                    <h6>Recommendations</h6>
-                                    <ul class="list-group list-group-flush">
-                                        @foreach (var r in _aiAnalysisObj.Recommendations)
-                                        {
-                                            <li class="list-group-item">@r</li>
-                                        }
-                                    </ul>
-                                }
+                            <h5 class="fw-semibold mb-1">@_aiAnalysisObj.Title</h5>
+                            <p class="text-muted mb-0">@_aiAnalysisObj.Summary</p>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center justify-content-md-end">
+                            <div class="text-end">
+                                <div class="small text-muted fw-semibold">Confidence</div>
+                                <div class="fs-5 fw-bold @(_aiAnalysisObj.Confidence >= 0.75 ? "text-success" : _aiAnalysisObj.Confidence >= 0.5 ? "text-warning" : "text-danger")">
+                                    @((_aiAnalysisObj.Confidence ?? 0).ToString("P0"))
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    @if (_aiAnalysisObj.Sections != null && _aiAnalysisObj.Sections.Any())
+                    <!-- Metrics -->
+                    @if (_aiAnalysisObj.Metrics != null && _aiAnalysisObj.Metrics.Any())
                     {
-                        <div class="row mt-3 g-3">
-                            @foreach (var s in _aiAnalysisObj.Sections)
+                        <div class="row g-3 mb-3">
+                            @foreach (var m in _aiAnalysisObj.Metrics)
                             {
-                                <div class="col-md-6">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-title">@s.Heading</h6>
-                                            <p class="card-text">@s.Body</p>
+                                <div class="col-sm-6 col-lg-3">
+                                    <div class="card h-100 border-0 bg-light">
+                                        <div class="card-body py-2">
+                                            <div class="small text-muted fw-semibold">@m.Label</div>
+                                            <div class="fs-5 fw-bold">@m.Value @(!string.IsNullOrWhiteSpace(m.Unit) ? $" {m.Unit}" : "")</div>
                                         </div>
                                     </div>
                                 </div>
@@ -144,17 +129,57 @@ else
                         </div>
                     }
 
+                    <!-- Sections -->
+                    @if (_aiAnalysisObj.Sections != null && _aiAnalysisObj.Sections.Any())
+                    {
+                        <div class="row g-3 mb-3">
+                            @foreach (var s in _aiAnalysisObj.Sections)
+                            {
+                                <div class="col-md-6">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="fw-semibold mb-1">@s.Heading</h6>
+                                            <p class="card-text text-muted mb-0">@s.Body</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Recommendations -->
+                    @if (_aiAnalysisObj.Recommendations != null && _aiAnalysisObj.Recommendations.Any())
+                    {
+                        <div class="mb-3">
+                            <h6 class="fw-semibold mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>Recommendations</h6>
+                            <ul class="list-group list-group-flush">
+                                @foreach (var r in _aiAnalysisObj.Recommendations)
+                                {
+                                    <li class="list-group-item ps-0 border-0 py-1">
+                                        <i class="bi bi-arrow-right-circle text-primary me-2"></i>@r
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Anomalies -->
                     @if (_aiAnalysisObj.Anomalies != null && _aiAnalysisObj.Anomalies.Any())
                     {
-                        <div class="mt-3">
-                            <h6>Anomalies</h6>
+                        <div>
+                            <h6 class="fw-semibold mb-2"><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i>Anomalies</h6>
                             <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead><tr><th>Row</th><th>Reason</th></tr></thead>
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr><th>Item / Row</th><th>Reason</th></tr>
+                                    </thead>
                                     <tbody>
                                         @foreach (var a in _aiAnalysisObj.Anomalies)
                                         {
-                                            <tr><td>@a.Row</td><td>@a.Reason</td></tr>
+                                            <tr class="table-warning">
+                                                <td>@a.Row</td>
+                                                <td>@a.Reason</td>
+                                            </tr>
                                         }
                                     </tbody>
                                 </table>
@@ -199,19 +224,16 @@ else
             _aiLoading = true;
             StateHasChanged();
 
-            try{
-               if (!string.IsNullOrWhiteSpace(_aiAnalysis))
+            try
+            {
+                var csvPath = Path.Combine(Env.ContentRootPath, "AIDashboard", "Services", "Reporting", "test_data.csv");
+                _aiAnalysis = await ReportingService.AnalyzeCsvAsync(csvPath);
+
+                if (!string.IsNullOrWhiteSpace(_aiAnalysis))
                 {
-                    var csvPath = Path.Combine(Env.ContentRootPath, "AIDashboard", "Services", "Reporting", "test_data.csv");
-                    _aiAnalysis = await ReportingService.AnalyzeCsvAsync(csvPath);
-                    
-                    // Try to deserialize the returned JSON into the DTO so we can render structured cards UI.
-                    if (!string.IsNullOrWhiteSpace(_aiAnalysis))
-                    {
-                        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        _aiAnalysisObj = System.Text.Json.JsonSerializer.Deserialize<AIAnalysisResultDTO>(_aiAnalysis, options);
-                    }
-                } 
+                    var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    _aiAnalysisObj = System.Text.Json.JsonSerializer.Deserialize<AIAnalysisResultDTO>(_aiAnalysis, options);
+                }
             }
             catch(Exception e)
             {
@@ -220,13 +242,11 @@ else
                 _aiAnalysis = null;
 
             }
-            finally {
+            finally
+            {
                 _aiLoading = false;
                 StateHasChanged();
             }
-            _aiLoading = false;
-            //_aiAnalysisObj = null;          //  Uncoomment above and delete curent like to activate AI
-            StateHasChanged();
         }
     }
 
