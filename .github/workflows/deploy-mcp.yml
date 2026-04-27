@@ -40,7 +40,7 @@ jobs:
         working-directory: CulinaryCommandSmartTaskMcp
         run: dotnet lambda package --output-package ../smarttask.zip
       
-      - name: Update Lambda contained
+      - name: Update Lambda code
         run: |
           aws lambda update-function-code \
             --function-name "${LAMBDA_FUNCTION_NAME}" \
