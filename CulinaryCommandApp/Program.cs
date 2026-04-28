@@ -108,16 +108,11 @@ builder.Services
       options.TokenValidationParameters.RoleClaimType = "cognito:groups";
 
       // Secure cookies only work over HTTPS; use SameAsRequest in dev (HTTP).
-    //   var securePolicy = builder.Environment.IsDevelopment()
-    //       ? CookieSecurePolicy.SameAsRequest
-    //       : CookieSecurePolicy.Always;
-    //   options.CorrelationCookie.SecurePolicy = securePolicy;
-    //   options.NonceCookie.SecurePolicy = securePolicy;
-
-    options.CorrelationCookie.SameSite = SameSiteMode.None;
-    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.NonceCookie.SameSite = SameSiteMode.None;
-    options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
+      var securePolicy = builder.Environment.IsDevelopment()
+          ? CookieSecurePolicy.SameAsRequest
+          : CookieSecurePolicy.Always;
+      options.CorrelationCookie.SecurePolicy = securePolicy;
+      options.NonceCookie.SecurePolicy = securePolicy;
 
       options.Events.OnRedirectToIdentityProvider = ctx =>
         {
