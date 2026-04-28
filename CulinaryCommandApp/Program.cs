@@ -25,6 +25,9 @@ using CulinaryCommand.Vendor.Services;
 using System.IO;
 using Resend;
 using CulinaryCommandApp.Inventory.Entities;
+using Amazon.Runtime;
+using CulinaryCommandApp.SmartTask.Services;
+using CulinaryCommandApp.SmartTask.Services.Interfaces;
 
 
 
@@ -122,7 +125,6 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
-
 //
 // =====================
 // AI Services
@@ -188,6 +190,33 @@ builder.Services.AddTransient<IResend, ResendClient>();
 builder.Services.AddScoped<IEmailSender, EmailSender>();    // End of Email Setup
 builder.Services.AddScoped<ITaskAssignmentService, TaskAssignmentService>();
 builder.Services.AddScoped<ITaskLibraryService, TaskLibraryService>();
+
+// SmartTask (Lambda orchestrator integration)
+var smartTaskAwsRegion = Amazon.RegionEndpoint.GetBySystemName(
+    builder.Configuration["SmartTask:AwsRegion"] ?? "us-east-2");
+
+var smartTaskLambdaFunctionUrlEndpoint = builder.Configuration["SmartTask:LambdaFunctionUrlEndpoint"]
+    ?? throw new InvalidOperationException("SmartTask:LambdaFunctionUrlEndpoint must be configured.");
+
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var awsOptions = serviceProvider.GetRequiredService<AWSOptions>();
+    return awsOptions.Credentials
+        ?? throw new InvalidOperationException("AWS credentials are not configured (AWSOptions.Credentials is null).");
+});
+builder.Services.AddTransient(serviceProvider => new SigV4SigningHandler(
+    serviceProvider.GetRequiredService<AWSCredentials>(),
+    smartTaskAwsRegion));
+
+builder.Services
+    .AddHttpClient<ISmartTaskOrchestratorClient, SmartTaskLambdaClient>(httpClient =>
+    {
+        httpClient.BaseAddress = new Uri(smartTaskLambdaFunctionUrlEndpoint);
+    })
+    .AddHttpMessageHandler<SigV4SigningHandler>();
+
+builder.Services.AddScoped<ISmartTaskService, SmartTaskService>();
+
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddSingleton<EnumService>();
 builder.Services.AddScoped<IVendorService, VendorService>();
