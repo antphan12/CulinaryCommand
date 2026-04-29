@@ -23,8 +23,8 @@ namespace CulinaryCommand.Tests.SmartTask
         {
             var ct = global::Xunit.TestContext.Current.CancellationToken;
 
-            using var dbContext = BuildSeededDbContext();
-            var dbContextFactory = BuildDbContextFactory(dbContext);
+            using var dbContext = BuildSeededDbContext(out var dbOptions);
+            var dbContextFactory = BuildDbContextFactory(dbOptions);
 
             var fakeOrchestratorClient = new Mock<ISmartTaskOrchestratorClient>();
             fakeOrchestratorClient
@@ -57,8 +57,8 @@ namespace CulinaryCommand.Tests.SmartTask
         {
             var ct = global::Xunit.TestContext.Current.CancellationToken;
 
-            using var dbContext = BuildSeededDbContext();
-            var dbContextFactory = BuildDbContextFactory(dbContext);
+            using var dbContext = BuildSeededDbContext(out var dbOptions);
+            var dbContextFactory = BuildDbContextFactory(dbOptions);
 
             var fakeOrchestratorClient = new Mock<ISmartTaskOrchestratorClient>();
             fakeOrchestratorClient
@@ -90,8 +90,8 @@ namespace CulinaryCommand.Tests.SmartTask
         {
             var ct = global::Xunit.TestContext.Current.CancellationToken;
 
-            using var dbContext = BuildSeededDbContext();
-            var dbContextFactory = BuildDbContextFactory(dbContext);
+            using var dbContext = BuildSeededDbContext(out var dbOptions);
+            var dbContextFactory = BuildDbContextFactory(dbOptions);
 
             var fakeOrchestratorClient = new Mock<ISmartTaskOrchestratorClient>();
             fakeOrchestratorClient
@@ -119,21 +119,22 @@ namespace CulinaryCommand.Tests.SmartTask
                 () => smartTaskService.RollbackAsync(committedRun.Id, ct));
         }
 
-        private static IDbContextFactory<AppDbContext> BuildDbContextFactory(AppDbContext dbContext)
+        private static IDbContextFactory<AppDbContext> BuildDbContextFactory(DbContextOptions<AppDbContext> dbOptions)
         {
             var factory = new Mock<IDbContextFactory<AppDbContext>>();
             factory
                 .Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(dbContext);
+                .ReturnsAsync(() => new AppDbContext(dbOptions));
             return factory.Object;
         }
 
-        private static AppDbContext BuildSeededDbContext()
+        private static AppDbContext BuildSeededDbContext(out DbContextOptions<AppDbContext> dbOptions)
         {
-            var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
+            dbOptions = new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
+
             var dbContext = new AppDbContext(dbOptions);
 
             dbContext.Locations.Add(new Location
@@ -156,5 +157,8 @@ namespace CulinaryCommand.Tests.SmartTask
             dbContext.SaveChanges();
             return dbContext;
         }
+
+        private static AppDbContext BuildSeededDbContext()
+            => BuildSeededDbContext(out _);
     }
 }
