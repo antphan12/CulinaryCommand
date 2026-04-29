@@ -6,6 +6,7 @@ using Amazon.Runtime;
 using Amazon.Runtime.Internal;
 using Amazon.Runtime.Internal.Auth;
 using Amazon.Runtime.Internal.Util;
+using Microsoft.Extensions.Logging;
 
 namespace CulinaryCommandApp.SmartTask.Services
 {
@@ -16,11 +17,16 @@ namespace CulinaryCommandApp.SmartTask.Services
 
         private readonly Func<AWSCredentials> _credentialsFactory;
         private readonly RegionEndpoint _awsRegion;
+        private readonly ILogger<SigV4SigningHandler> _logger;
 
-        public SigV4SigningHandler(Func<AWSCredentials> credentialsFactory, RegionEndpoint awsRegion)
+        public SigV4SigningHandler(
+            Func<AWSCredentials> credentialsFactory,
+            RegionEndpoint awsRegion,
+            ILogger<SigV4SigningHandler> logger)
         {
             _credentialsFactory = credentialsFactory;
             _awsRegion = awsRegion;
+            _logger = logger;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -88,10 +94,6 @@ namespace CulinaryCommandApp.SmartTask.Services
             var awsV4Signer = new AWS4Signer();
             var lambdaConfig = new AmazonLambdaConfig { RegionEndpoint = _awsRegion };
 
-            // Use SignRequest (access key + secret key) so the x-amz-security-token
-            // header we already placed on the request is part of the canonical
-            // signed-headers list. Then apply the Authorization header from the
-            // result ourselves (SignRequest does not set it).
             var signingResult = awsV4Signer.SignRequest(
                 awsRequestForSigning,
                 lambdaConfig,
@@ -121,6 +123,35 @@ namespace CulinaryCommandApp.SmartTask.Services
 
             outboundRequest.Content ??= new StringContent(string.Empty);
             outboundRequest.Content.Headers.ContentType ??= new MediaTypeHeaderValue("application/json");
+
+            // Diagnostics: confirm the handler ran and SigV4 headers were applied.
+            // Do NOT log secrets. We only log presence + access key prefix + request shape.
+            var hasAuth = outboundRequest.Headers.TryGetValues("Authorization", out _);
+            var hasAmzDate = outboundRequest.Headers.TryGetValues("X-Amz-Date", out _);
+            var hasToken = outboundRequest.Headers.TryGetValues(SecurityTokenHeader, out _);
+
+            var accessKeyPrefix = string.IsNullOrWhiteSpace(immutableCredentials.AccessKey)
+                ? "(none)"
+                : immutableCredentials.AccessKey[..Math.Min(4, immutableCredentials.AccessKey.Length)];
+
+            var credentialsType = awsCredentials.GetType().FullName ?? awsCredentials.GetType().Name;
+            var payloadBytes = awsRequestForSigning.Content?.Length ?? 0;
+            var hasQuery = !string.IsNullOrWhiteSpace(requestUri.Query);
+
+            _logger.LogInformation(
+                "SigV4 applied. Service={Service} Region={Region} CredentialsType={CredentialsType} AccessKeyPrefix={AccessKeyPrefix} Method={Method} Host={Host} Path={Path} HasQuery={HasQuery} PayloadBytes={PayloadBytes} HasAuthorization={HasAuthorization} HasXAmzDate={HasXAmzDate} HasSecurityToken={HasSecurityToken}",
+                LambdaServiceName,
+                _awsRegion.SystemName,
+                credentialsType,
+                accessKeyPrefix,
+                outboundRequest.Method.Method,
+                requestUri.Host,
+                requestUri.AbsolutePath,
+                hasQuery,
+                payloadBytes,
+                hasAuth,
+                hasAmzDate,
+                hasToken);
 
             return await base.SendAsync(outboundRequest, cancellationToken);
         }
