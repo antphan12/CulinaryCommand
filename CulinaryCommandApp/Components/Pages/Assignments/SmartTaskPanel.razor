@@ -29,16 +29,24 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Recipes</label>
-                <div class="recipe-checklist">
-                    @foreach (var recipe in AvailableRecipes)
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0">Recipes</label>
+                    <span class="badge bg-secondary">@selectedRecipeIds.Count selected</span>
+                </div>
+                <input type="text"
+                       class="form-control form-control-sm mb-1"
+                       placeholder="Filter recipes…"
+                       @bind="recipeFilter"
+                       @bind:event="oninput" />
+                <div class="recipe-checklist border rounded px-2 py-1" style="max-height:180px;overflow-y:auto;">
+                    @foreach (var recipe in FilteredRecipes)
                     {
-                        <label class="form-check">
+                        <label class="form-check form-check-inline mb-0 py-1" style="min-width:45%;max-width:50%;">
                             <input type="checkbox"
                                    class="form-check-input"
                                    checked="@selectedRecipeIds.Contains(recipe.RecipeId)"
                                    @onchange="@(args => ToggleRecipeSelection(recipe.RecipeId, args))" />
-                            <span class="form-check-label">@recipe.Title</span>
+                            <span class="form-check-label text-truncate d-inline-block" style="max-width:calc(100% - 1.5rem);">@recipe.Title</span>
                         </label>
                     }
                 </div>
@@ -104,6 +112,11 @@
     private bool isPlanning;
     private bool isCommitting;
     private string? errorMessage;
+    private string recipeFilter = string.Empty;
+
+    private IEnumerable<Recipe> FilteredRecipes => string.IsNullOrWhiteSpace(recipeFilter)
+        ? AvailableRecipes
+        : AvailableRecipes.Where(r => r.Title.Contains(recipeFilter, StringComparison.OrdinalIgnoreCase));
 
     private bool IsGloballyEnabled => Configuration.GetValue("SmartTask:Enabled", false);
 
